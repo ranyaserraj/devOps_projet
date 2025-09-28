@@ -1,0 +1,35 @@
+pipeline {
+    agent any
+    
+    options {
+        timeout(time: 5, unit: 'MINUTES')
+    }
+    
+    stages {
+        stage('Quick Setup') {
+            steps {
+                echo '⚡ Quick Windows setup...'
+                git branch: 'master', url: 'https://github.com/ranyaserraj/devOps_projet.git'
+            }
+        }
+        
+        stage('Fast Tests') {
+            steps {
+                echo '🚀 Running fast tests...'
+                bat '''
+                    cd tests
+                    if not exist node_modules (
+                        npm install --silent
+                    )
+                    node test-runner.js
+                '''
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '⚡ Fast build completed!'
+        }
+    }
+}
