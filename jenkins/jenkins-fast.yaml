@@ -1,0 +1,70 @@
+jenkins:
+  systemMessage: "IDURAR ERP CRM - Jenkins Fast Configuration"
+  numExecutors: 2
+  scmCheckoutRetryCount: 1
+  mode: NORMAL
+  
+  # Optimisations pour démarrage rapide
+  remotingSecurity:
+    enabled: true
+  
+  # Configuration des agents
+  clouds:
+    - docker:
+        name: "docker"
+        templates:
+          - labelString: "docker-fast"
+            dockerTemplateBase:
+              image: "node:18-alpine"
+              pullStrategy: PULL_NEVER
+              network: "jenkins-fast"
+            remoteFs: "/home/jenkins"
+            instanceCapStr: "2"
+            connectTimeout: 60
+            readTimeout: 60
+
+# Configuration de sécurité
+securityRealm:
+  local:
+    allowsSignup: false
+    users:
+      - id: "admin"
+        password: "admin123"
+
+# Configuration des autorisations
+authorizationStrategy:
+  globalMatrix:
+    permissions:
+      - "Overall/Administer:admin"
+      - "Overall/Read:authenticated"
+
+# Configuration des jobs
+jobs:
+  - name: "idurar-baseline-tests"
+    type: "pipeline"
+    properties:
+      - buildDiscarder:
+          numToKeep: 5
+    pipeline:
+      script: |
+        pipeline {
+          agent any
+          stages {
+            stage('Checkout') {
+              steps {
+                echo 'Checking out code...'
+              }
+            }
+            stage('Tests') {
+              steps {
+                echo 'Running baseline tests...'
+                sh 'cd tests && node test-runner.js'
+              }
+            }
+          }
+          post {
+            always {
+              echo 'Tests completed!'
+            }
+          }
+        }

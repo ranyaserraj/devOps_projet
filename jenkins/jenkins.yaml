@@ -1,0 +1,25 @@
+jenkins:
+  systemMessage: "IDURAR ERP CRM - Heavy Baseline Testing Environment"
+  numExecutors: 4
+  scmCheckoutRetryCount: 3
+  mode: NORMAL
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "admin123"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  remotingSecurity:
+    enabled: true
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: "HEAVY_TEST_MODE"
+            value: "true"
+          - key: "TEST_DURATION"
+            value: "300000"
+          - key: "CONCURRENT_REQUESTS"
+            value: "100"

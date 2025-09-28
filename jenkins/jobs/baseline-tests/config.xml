@@ -1,0 +1,135 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.45">
+  <description>IDURAR ERP CRM - Optimized Baseline Tests</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeepStr>7</daysToKeepStr>
+        <numToKeepStr>10</numToKeepStr>
+        <artifactDaysToKeepStr>-1</artifactDaysToKeepStr>
+        <artifactNumToKeepStr>-1</artifactNumToKeepStr>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+  </properties>
+  <triggers>
+    <hudson.triggers.TimerTrigger>
+      <spec>H */2 * * *</spec>
+    </hudson.triggers.TimerTrigger>
+  </triggers>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
+    <script>
+pipeline {
+    agent any
+    
+    environment {
+        API_URL = 'http://localhost:5000'
+        FRONTEND_URL = 'http://localhost:3000'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '🔍 Checking out code...'
+                checkout scm
+            }
+        }
+        
+        stage('Environment Setup') {
+            steps {
+                echo '🔧 Setting up test environment...'
+                script {
+                    sh '''
+                        cd /workspace
+                        docker-compose up -d
+                        sleep 30
+                    '''
+                }
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                echo '📦 Installing test dependencies...'
+                script {
+                    sh '''
+                        cd /workspace/tests
+                        npm install axios
+                    '''
+                }
+            }
+        }
+        
+        stage('Backend Tests') {
+            steps {
+                echo '🔥 Running backend baseline tests...'
+                script {
+                    sh '''
+                        cd /workspace/tests
+                        node backend-corrected.test.js
+                    '''
+                }
+            }
+        }
+        
+        stage('Frontend Tests') {
+            steps {
+                echo '🎨 Running frontend baseline tests...'
+                script {
+                    sh '''
+                        cd /workspace/tests
+                        node frontend-simple.test.js
+                    '''
+                }
+            }
+        }
+        
+        stage('Performance Tests') {
+            steps {
+                echo '⚡ Running performance baseline tests...'
+                script {
+                    sh '''
+                        cd /workspace/tests
+                        node performance-simple.test.js
+                    '''
+                }
+            }
+        }
+        
+        stage('All Tests') {
+            steps {
+                echo '🧪 Running all baseline tests...'
+                script {
+                    sh '''
+                        cd /workspace/tests
+                        node test-runner.js
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '🧹 Cleaning up...'
+            script {
+                sh '''
+                    cd /workspace
+                    docker-compose down
+                '''
+            }
+        }
+        
+        success {
+            echo '✅ All baseline tests completed successfully!'
+        }
+        
+        failure {
+            echo '❌ Baseline tests failed!'
+        }
+    }
+}
+    </script>
+    <sandbox>true</sandbox>
+  </definition>
+</flow-definition>

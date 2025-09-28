@@ -1,0 +1,213 @@
+pipeline {
+    agent any
+    
+    environment {
+        // Test environment variables
+        API_URL = 'http://localhost:5000'
+        FRONTEND_URL = 'http://localhost:3000'
+        TEST_DATABASE_URL = 'mongodb://jenkins:jenkins123@jenkins-mongodb:27017/jenkins_test?authSource=admin'
+        
+        // Heavy testing configuration
+        HEAVY_TEST_MODE = 'true'
+        CONCURRENT_REQUESTS = '100'
+        TEST_DURATION = '300000' // 5 minutes
+        MEMORY_LIMIT = '2GB'
+        CPU_LIMIT = '4'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '🔍 Checking out code...'
+                checkout scm
+            }
+        }
+        
+        stage('Environment Setup') {
+            steps {
+                echo '🔧 Setting up test environment...'
+                script {
+                    // Start application services
+                    sh '''
+                        cd /workspace
+                        docker-compose up -d
+                        sleep 30
+                    '''
+                }
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                echo '📦 Installing test dependencies...'
+                script {
+                    sh '''
+                        cd /workspace/tests
+                        npm install
+                    '''
+                }
+            }
+        }
+        
+        stage('Backend API Tests') {
+            steps {
+                echo '🔥 Running heavy backend API tests...'
+                script {
+                    sh '''
+                        cd /workspace/tests
+                        npm run test:integration -- --testPathPattern=backend
+                    '''
+                }
+            }
+            post {
+                always {
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'coverage',
+                        reportFiles: 'index.html',
+                        reportName: 'Backend API Test Report'
+                    ])
+                }
+            }
+        }
+        
+        stage('Frontend UI Tests') {
+            steps {
+                echo '🎨 Running heavy frontend UI tests...'
+                script {
+                    sh '''
+                        cd /workspace/tests
+                        npm run test -- --testPathPattern=frontend
+                    '''
+                }
+            }
+            post {
+                always {
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'coverage',
+                        reportFiles: 'index.html',
+                        reportName: 'Frontend UI Test Report'
+                    ])
+                }
+            }
+        }
+        
+        stage('Performance Tests') {
+            steps {
+                echo '⚡ Running heavy performance tests...'
+                script {
+                    sh '''
+                        cd /workspace/tests
+                        npm run test:performance
+                    '''
+                }
+            }
+            post {
+                always {
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'coverage',
+                        reportFiles: 'index.html',
+                        reportName: 'Performance Test Report'
+                    ])
+                }
+            }
+        }
+        
+        stage('Load Tests') {
+            steps {
+                echo '🔥 Running heavy load tests...'
+                script {
+                    sh '''
+                        cd /workspace/tests
+                        npm run test:load
+                    '''
+                }
+            }
+        }
+        
+        stage('Security Tests') {
+            steps {
+                echo '🔒 Running security tests...'
+                script {
+                    sh '''
+                        cd /workspace/tests
+                        npm run test:security
+                    '''
+                }
+            }
+        }
+        
+        stage('Resource Monitoring') {
+            steps {
+                echo '📊 Monitoring resource consumption...'
+                script {
+                    sh '''
+                        # Monitor Docker resource usage
+                        docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}" > resource-usage.txt
+                        
+                        # Monitor system resources
+                        top -bn1 | head -20 >> resource-usage.txt
+                        free -h >> resource-usage.txt
+                        df -h >> resource-usage.txt
+                    '''
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'resource-usage.txt', fingerprint: true
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '🧹 Cleaning up test environment...'
+            script {
+                sh '''
+                    cd /workspace
+                    docker-compose down
+                    docker system prune -f
+                '''
+            }
+        }
+        
+        success {
+            echo '✅ All heavy baseline tests completed successfully!'
+            script {
+                // Send notification for successful tests
+                sh '''
+                    echo "IDURAR ERP CRM - Heavy Baseline Tests PASSED" | \
+                    curl -X POST -H "Content-Type: application/json" \
+                    -d '{"text":"✅ IDURAR ERP CRM Heavy Baseline Tests PASSED\\n🌱 CO₂ optimization will be implemented later"}' \
+                    $SLACK_WEBHOOK_URL || true
+                '''
+            }
+        }
+        
+        failure {
+            echo '❌ Heavy baseline tests failed!'
+            script {
+                // Send notification for failed tests
+                sh '''
+                    echo "IDURAR ERP CRM - Heavy Baseline Tests FAILED" | \
+                    curl -X POST -H "Content-Type: application/json" \
+                    -d '{"text":"❌ IDURAR ERP CRM Heavy Baseline Tests FAILED\\n🔍 Check Jenkins logs for details"}' \
+                    $SLACK_WEBHOOK_URL || true
+                '''
+            }
+        }
+        
+        unstable {
+            echo '⚠️ Heavy baseline tests completed with warnings!'
+        }
+    }
+}

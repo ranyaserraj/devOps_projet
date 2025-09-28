@@ -1,0 +1,14 @@
+{
+  "name": "idurar-erp-crm-tests-simple",
+  "version": "1.0.0",
+  "description": "Simple baseline tests for IDURAR ERP CRM",
+  "scripts": {
+    "test": "node test-runner.js",
+    "test:backend": "node backend-simple.test.js",
+    "test:frontend": "node frontend-simple.test.js",
+    "test:performance": "node performance-simple.test.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.2"
+  }
+}

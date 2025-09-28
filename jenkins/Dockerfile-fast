@@ -1,0 +1,29 @@
+# Jenkins Fast - Configuration optimisée pour démarrage rapide
+FROM jenkins/jenkins:lts-jdk17
+
+# Utilisateur root pour les optimisations
+USER root
+
+# Optimisations système
+RUN echo "vm.swappiness=10" >> /etc/sysctl.conf && \
+    echo "vm.vfs_cache_pressure=50" >> /etc/sysctl.conf
+
+# Installation minimale des plugins essentiels
+COPY plugins-fast.txt /usr/share/jenkins/ref/plugins-fast.txt
+RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins-fast.txt
+
+# Configuration Jenkins optimisée
+COPY jenkins-fast.yaml /var/jenkins_home/jenkins.yaml
+
+# Script de démarrage rapide
+COPY start-fast.sh /usr/local/bin/start-fast.sh
+RUN chmod +x /usr/local/bin/start-fast.sh
+
+# Retour à l'utilisateur jenkins
+USER jenkins
+
+# Ports
+EXPOSE 8080 50000
+
+# Commande de démarrage optimisée
+CMD ["/usr/local/bin/start-fast.sh"]
