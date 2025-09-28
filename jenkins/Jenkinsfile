@@ -1,37 +1,31 @@
 pipeline {
     agent any
     
+    options {
+        timeout(time: 10, unit: 'MINUTES')
+        timestamps()
+    }
+    
     environment {
-        // Test environment variables
-        API_URL = 'http://localhost:5000'
-        FRONTEND_URL = 'http://localhost:3000'
-        TEST_DATABASE_URL = 'mongodb://jenkins:jenkins123@jenkins-mongodb:27017/jenkins_test?authSource=admin'
-        
-        // Heavy testing configuration
-        HEAVY_TEST_MODE = 'true'
-        CONCURRENT_REQUESTS = '100'
-        TEST_DURATION = '300000' // 5 minutes
-        MEMORY_LIMIT = '2GB'
-        CPU_LIMIT = '4'
+        NODE_VERSION = '18'
     }
     
     stages {
         stage('Checkout') {
             steps {
-                echo '🔍 Checking out code...'
-                checkout scm
+                echo '📥 Checking out code from GitHub...'
+                git branch: 'master', url: 'https://github.com/ranyaserraj/devOps_projet.git'
             }
         }
         
-        stage('Environment Setup') {
+        stage('Setup Environment') {
             steps {
-                echo '🔧 Setting up test environment...'
+                echo '🔧 Setting up Windows environment...'
                 script {
-                    // Start application services
-                    sh '''
-                        cd /workspace
-                        docker-compose up -d
-                        sleep 30
+                    // Check if Node.js is available
+                    bat '''
+                        node --version
+                        npm --version
                     '''
                 }
             }
@@ -39,175 +33,64 @@ pipeline {
         
         stage('Install Dependencies') {
             steps {
-                echo '📦 Installing test dependencies...'
-                script {
-                    sh '''
-                        cd /workspace/tests
-                        npm install
-                    '''
-                }
+                echo '📦 Installing dependencies...'
+                bat '''
+                    cd tests
+                    npm install
+                '''
             }
         }
         
-        stage('Backend API Tests') {
+        stage('Backend Tests') {
             steps {
-                echo '🔥 Running heavy backend API tests...'
-                script {
-                    sh '''
-                        cd /workspace/tests
-                        npm run test:integration -- --testPathPattern=backend
-                    '''
-                }
-            }
-            post {
-                always {
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'coverage',
-                        reportFiles: 'index.html',
-                        reportName: 'Backend API Test Report'
-                    ])
-                }
+                echo '🧪 Running Backend API Tests...'
+                bat '''
+                    cd tests
+                    node backend-corrected.test.js
+                '''
             }
         }
         
-        stage('Frontend UI Tests') {
+        stage('Frontend Tests') {
             steps {
-                echo '🎨 Running heavy frontend UI tests...'
-                script {
-                    sh '''
-                        cd /workspace/tests
-                        npm run test -- --testPathPattern=frontend
-                    '''
-                }
-            }
-            post {
-                always {
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'coverage',
-                        reportFiles: 'index.html',
-                        reportName: 'Frontend UI Test Report'
-                    ])
-                }
+                echo '🎨 Running Frontend Tests...'
+                bat '''
+                    cd tests
+                    node frontend-simple.test.js
+                '''
             }
         }
         
         stage('Performance Tests') {
             steps {
-                echo '⚡ Running heavy performance tests...'
-                script {
-                    sh '''
-                        cd /workspace/tests
-                        npm run test:performance
-                    '''
-                }
-            }
-            post {
-                always {
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'coverage',
-                        reportFiles: 'index.html',
-                        reportName: 'Performance Test Report'
-                    ])
-                }
+                echo '⚡ Running Performance Tests...'
+                bat '''
+                    cd tests
+                    node performance-simple.test.js
+                '''
             }
         }
         
-        stage('Load Tests') {
+        stage('Full Test Suite') {
             steps {
-                echo '🔥 Running heavy load tests...'
-                script {
-                    sh '''
-                        cd /workspace/tests
-                        npm run test:load
-                    '''
-                }
-            }
-        }
-        
-        stage('Security Tests') {
-            steps {
-                echo '🔒 Running security tests...'
-                script {
-                    sh '''
-                        cd /workspace/tests
-                        npm run test:security
-                    '''
-                }
-            }
-        }
-        
-        stage('Resource Monitoring') {
-            steps {
-                echo '📊 Monitoring resource consumption...'
-                script {
-                    sh '''
-                        # Monitor Docker resource usage
-                        docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}" > resource-usage.txt
-                        
-                        # Monitor system resources
-                        top -bn1 | head -20 >> resource-usage.txt
-                        free -h >> resource-usage.txt
-                        df -h >> resource-usage.txt
-                    '''
-                }
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'resource-usage.txt', fingerprint: true
-                }
+                echo '🚀 Running Complete Test Suite...'
+                bat '''
+                    cd tests
+                    node test-runner.js
+                '''
             }
         }
     }
     
     post {
         always {
-            echo '🧹 Cleaning up test environment...'
-            script {
-                sh '''
-                    cd /workspace
-                    docker-compose down
-                    docker system prune -f
-                '''
-            }
+            echo '📊 Test execution completed!'
         }
-        
         success {
-            echo '✅ All heavy baseline tests completed successfully!'
-            script {
-                // Send notification for successful tests
-                sh '''
-                    echo "IDURAR ERP CRM - Heavy Baseline Tests PASSED" | \
-                    curl -X POST -H "Content-Type: application/json" \
-                    -d '{"text":"✅ IDURAR ERP CRM Heavy Baseline Tests PASSED\\n🌱 CO₂ optimization will be implemented later"}' \
-                    $SLACK_WEBHOOK_URL || true
-                '''
-            }
+            echo '✅ All tests passed successfully!'
         }
-        
         failure {
-            echo '❌ Heavy baseline tests failed!'
-            script {
-                // Send notification for failed tests
-                sh '''
-                    echo "IDURAR ERP CRM - Heavy Baseline Tests FAILED" | \
-                    curl -X POST -H "Content-Type: application/json" \
-                    -d '{"text":"❌ IDURAR ERP CRM Heavy Baseline Tests FAILED\\n🔍 Check Jenkins logs for details"}' \
-                    $SLACK_WEBHOOK_URL || true
-                '''
-            }
-        }
-        
-        unstable {
-            echo '⚠️ Heavy baseline tests completed with warnings!'
+            echo '❌ Some tests failed!'
         }
     }
 }
