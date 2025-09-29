@@ -22,10 +22,18 @@ pipeline {
             steps {
                 echo '🔧 Setting up Linux environment...'
                 script {
-                    // Install Node.js if not available
+                    // Install Node.js using nvm (no sudo required)
                     sh '''
-                        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-                        sudo apt-get install -y nodejs
+                        # Install nvm
+                        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+                        export NVM_DIR="$HOME/.nvm"
+                        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                        
+                        # Install and use Node.js 18
+                        nvm install 18
+                        nvm use 18
+                        
+                        # Verify installation
                         node --version
                         npm --version
                     '''
@@ -37,6 +45,11 @@ pipeline {
             steps {
                 echo '📦 Installing dependencies...'
                 sh '''
+                    # Load nvm
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    nvm use 18
+                    
                     cd tests
                     npm install
                 '''
@@ -47,6 +60,11 @@ pipeline {
             steps {
                 echo '🧪 Running Backend API Tests...'
                 sh '''
+                    # Load nvm
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    nvm use 18
+                    
                     cd tests
                     node backend-corrected.test.js
                 '''
@@ -57,6 +75,11 @@ pipeline {
             steps {
                 echo '🎨 Running Frontend Tests...'
                 sh '''
+                    # Load nvm
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    nvm use 18
+                    
                     cd tests
                     node frontend-simple.test.js
                 '''
@@ -67,6 +90,11 @@ pipeline {
             steps {
                 echo '⚡ Running Performance Tests...'
                 sh '''
+                    # Load nvm
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    nvm use 18
+                    
                     cd tests
                     node performance-simple.test.js
                 '''
@@ -77,6 +105,11 @@ pipeline {
             steps {
                 echo '🚀 Running Complete Test Suite...'
                 sh '''
+                    # Load nvm
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    nvm use 18
+                    
                     cd tests
                     node test-runner.js
                 '''
