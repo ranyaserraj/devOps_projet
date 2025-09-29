@@ -1,0 +1,72 @@
+groups:
+  - name: ci-cd-alerts
+    rules:
+      # High CPU usage during CI/CD jobs
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for more than 5 minutes on {{ $labels.instance }}"
+
+      # High memory usage during CI/CD jobs
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 85% for more than 5 minutes on {{ $labels.instance }}"
+
+      # Long running CI/CD jobs
+      - alert: LongRunningJob
+        expr: jenkins_job_duration_seconds > 1800
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Long running CI/CD job detected"
+          description: "Job {{ $labels.job_name }} has been running for more than 30 minutes"
+
+      # Failed CI/CD jobs
+      - alert: FailedJob
+        expr: jenkins_job_last_build_result == 1
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CI/CD job failed"
+          description: "Job {{ $labels.job_name }} has failed"
+
+      # High disk usage
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High disk usage detected"
+          description: "Disk usage is above 90% on {{ $labels.instance }} for {{ $labels.mountpoint }}"
+
+      # Container resource limits
+      - alert: ContainerHighCPU
+        expr: rate(container_cpu_usage_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is above 80%"
+
+      - alert: ContainerHighMemory
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high memory usage"
+          description: "Container {{ $labels.name }} memory usage is above 85%"
+

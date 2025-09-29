@@ -1,0 +1,33 @@
+{
+  "name": "idurar-monitoring-scripts",
+  "version": "1.0.0",
+  "description": "Monitoring scripts for IDURAR ERP CRM CI/CD baseline metrics",
+  "main": "metrics-collector.js",
+  "scripts": {
+    "start": "node jenkins-metrics-exporter.js",
+    "dev": "nodemon jenkins-metrics-exporter.js",
+    "test": "jest",
+    "lint": "eslint *.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.2",
+    "prom-client": "^15.1.0",
+    "nodemon": "^3.0.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.55.0"
+  },
+  "keywords": [
+    "monitoring",
+    "prometheus",
+    "grafana",
+    "cicd",
+    "jenkins",
+    "metrics"
+  ],
+  "author": "IDURAR Team",
+  "license": "MIT"
+}
+

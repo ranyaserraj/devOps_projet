@@ -1,0 +1,189 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Jenkins Detailed Metrics",
+    "tags": ["jenkins", "cicd", "detailed"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Jenkins Build Queue",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "jenkins_job_queue_size",
+            "legendFormat": "Queue Size"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "custom": {"hideFrom": {"legend": false, "tooltip": false, "vis": false}},
+            "mappings": [],
+            "thresholds": {"steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 5}, {"color": "red", "value": 10}]}
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Active Builds",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "jenkins_job_active_builds",
+            "legendFormat": "Active Builds"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "custom": {"hideFrom": {"legend": false, "tooltip": false, "vis": false}},
+            "mappings": [],
+            "thresholds": {"steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 3}, {"color": "red", "value": 5}]}
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Build Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(jenkins_job_last_build_result == 0) / sum(jenkins_job_last_build_result >= 0) * 100",
+            "legendFormat": "Success Rate %"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "custom": {"hideFrom": {"legend": false, "tooltip": false, "vis": false}},
+            "mappings": [],
+            "thresholds": {"steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 80}, {"color": "green", "value": 95}]},
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Total Builds Today",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(increase(jenkins_job_builds_total[1d]))",
+            "legendFormat": "Builds Today"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {"hideFrom": {"legend": false, "tooltip": false, "vis": false}},
+            "mappings": [],
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Build Duration by Job",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "jenkins_job_duration_seconds",
+            "legendFormat": "{{job_name}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {"hideFrom": {"legend": false, "tooltip": false, "vis": false}},
+            "mappings": [],
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Build Status Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum(jenkins_job_last_build_result == 0)",
+            "legendFormat": "Success"
+          },
+          {
+            "expr": "sum(jenkins_job_last_build_result == 1)",
+            "legendFormat": "Failed"
+          },
+          {
+            "expr": "sum(jenkins_job_last_build_result == 2)",
+            "legendFormat": "Unstable"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {"hideFrom": {"legend": false, "tooltip": false, "vis": false}},
+            "mappings": [],
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Jenkins System Load",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "jenkins_system_load_average",
+            "legendFormat": "Load Average"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {"hideFrom": {"legend": false, "tooltip": false, "vis": false}},
+            "mappings": [],
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Jenkins Memory Usage",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "jenkins_memory_usage_bytes / 1024 / 1024",
+            "legendFormat": "Memory Usage MB"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {"hideFrom": {"legend": false, "tooltip": false, "vis": false}},
+            "mappings": [],
+            "unit": "MB"
+          }
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "schemaVersion": 27,
+    "version": 1,
+    "links": []
+  }
+}
+
