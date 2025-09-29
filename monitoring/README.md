@@ -1,245 +1,196 @@
-# 📊 IDURAR ERP CRM - Monitoring CI/CD Baseline
+# 📊 Monitoring IDURAR ERP CRM
 
-## 🎯 Objectifs
+Ce répertoire contient la configuration complète du monitoring pour l'application IDURAR ERP CRM avec Prometheus, Grafana et Alertmanager.
 
-Ce module de monitoring permet de suivre en temps réel la consommation des ressources lors des jobs CI/CD et de générer des métriques détaillées sur :
+## 🎯 Vue d'ensemble
 
-- **CPU, RAM, durée d'exécution, disque**
-- **Métriques des tests baseline**
-- **Performance des builds Jenkins**
-- **Consommation des conteneurs Docker**
+Le système de monitoring fournit :
+- **Collecte de métriques** avec Prometheus
+- **Visualisation** avec Grafana
+- **Alertes** avec Alertmanager
+- **Monitoring des conteneurs** avec cAdvisor
+- **Métriques système** avec Node Exporter
 
-## 🏗️ Architecture
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Jenkins       │    │   Prometheus    │    │    Grafana      │
-│   (CI/CD)       │───▶│   (Metrics)     │───▶│  (Dashboards)   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ Node Exporter   │    │   cAdvisor      │    │  Alertmanager   │
-│ (System)        │    │ (Containers)    │    │   (Alerts)      │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-## 🚀 Démarrage Rapide
-
-### 1. Lancer le Stack de Monitoring
+## 🚀 Démarrage rapide
 
 ```bash
+# Démarrer le monitoring
 cd monitoring
 docker-compose up -d
+
+# Vérifier le statut
+docker ps --filter "name=idurar-"
 ```
 
-### 2. Accéder aux Services
+## 🌐 Accès aux interfaces
 
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| **Grafana** | http://localhost:3001 | admin/admin123 |
-| **Prometheus** | http://localhost:9090 | - |
-| **Jenkins** | http://localhost:8081 | - |
-| **Alertmanager** | http://localhost:9093 | - |
+| Service | URL | Port | Description |
+|---------|-----|------|-------------|
+| **Prometheus** | http://localhost:9090 | 9090 | Collecte et requête des métriques |
+| **Grafana** | http://localhost:3001 | 3001 | Dashboards et visualisation |
+| **Alertmanager** | http://localhost:9093 | 9093 | Gestion des alertes |
+| **cAdvisor** | http://localhost:8081 | 8081 | Métriques des conteneurs |
+| **Node Exporter** | http://localhost:9100 | 9100 | Métriques système |
 
-## 📈 Dashboards Disponibles
+### 🔑 Identifiants par défaut
+- **Grafana** : admin / admin123
 
-### 1. **CI/CD Overview** (`/dashboards/ci-cd-overview.json`)
-- ✅ Statut des jobs CI/CD
-- 📊 Utilisation CPU/Mémoire système
-- 💾 Utilisation disque
-- ⏱️ Durée des jobs
-- 🐳 Ressources des conteneurs
+## 📊 Dashboards disponibles
 
-### 2. **Performance Baseline** (`/dashboards/performance-baseline.json`)
-- 🧪 Temps d'exécution des tests
-- 📊 Taux de succès des tests
-- 🌐 Temps de réponse API
-- 📈 Couverture de code
-- 🔥 Consommation pendant les tests
+### 1. CI/CD Overview
+- Métriques Jenkins
+- Temps de build
+- Taux de succès des pipelines
 
-### 3. **Jenkins Detailed** (`/dashboards/jenkins-detailed.json`)
-- 📋 Queue des builds
-- 🏗️ Builds actifs
-- ✅ Taux de succès
-- 📊 Distribution des statuts
-- 💻 Charge système Jenkins
+### 2. Jenkins Detailed
+- Jobs Jenkins
+- Utilisation des ressources
+- Historique des builds
+
+### 3. Performance Baseline
+- Métriques de performance
+- Temps de réponse
+- Utilisation des ressources
 
 ## 🔧 Configuration
 
-### Variables d'Environnement
+### Prometheus
+- **Fichier** : `prometheus/prometheus.yml`
+- **Règles** : `prometheus/rules/`
+- **Intervalle de collecte** : 15s
+
+### Grafana
+- **Dashboards** : `grafana/dashboards/`
+- **Datasources** : `grafana/provisioning/datasources/`
+- **Plugins** : grafana-piechart-panel
+
+### Alertmanager
+- **Configuration** : `alertmanager/alertmanager.yml`
+- **Règles d'alerte** : `prometheus/rules/ci-cd-alerts.yml`
+
+## 📈 Métriques surveillées
+
+### Application
+- Temps de réponse API
+- Taux d'erreur
+- Utilisation CPU/Mémoire
+- Requêtes base de données
+
+### Infrastructure
+- Utilisation CPU système
+- Utilisation mémoire
+- Espace disque
+- Réseau I/O
+
+### Conteneurs
+- CPU par conteneur
+- Mémoire par conteneur
+- Réseau par conteneur
+- Disque par conteneur
+
+## 🚨 Alertes configurées
+
+### Niveau Critique
+- CPU > 80% pendant 5 minutes
+- Mémoire > 90% pendant 3 minutes
+- Disque > 95%
+- Service down
+
+### Niveau Warning
+- CPU > 60% pendant 10 minutes
+- Mémoire > 70% pendant 5 minutes
+- Temps de réponse > 2s
+
+## 🛠️ Commandes utiles
 
 ```bash
-# Jenkins
-JENKINS_URL=http://jenkins:8080
-JENKINS_USER=admin
-JENKINS_TOKEN=your_token
+# Voir les logs
+docker-compose logs -f prometheus
+docker-compose logs -f grafana
 
-# Monitoring
-PROMETHEUS_RETENTION=200h
-GRAFANA_ADMIN_PASSWORD=admin123
+# Redémarrer un service
+docker-compose restart prometheus
+
+# Voir les métriques
+curl http://localhost:9090/api/v1/query?query=up
+
+# Tester les alertes
+curl http://localhost:9093/api/v1/alerts
 ```
 
-### Métriques Collectées
+## 📋 Maintenance
 
-#### **Système**
-- `node_cpu_seconds_total` - Utilisation CPU
-- `node_memory_MemTotal_bytes` - Mémoire totale
-- `node_filesystem_size_bytes` - Taille disque
-
-#### **Conteneurs**
-- `container_cpu_usage_seconds_total` - CPU conteneur
-- `container_memory_usage_bytes` - Mémoire conteneur
-- `container_network_receive_bytes_total` - Réception réseau
-
-#### **Jenkins**
-- `jenkins_job_duration_seconds` - Durée des jobs
-- `jenkins_job_last_build_result` - Résultat des builds
-- `jenkins_job_queue_size` - Taille de la queue
-
-#### **Tests Baseline**
-- `test_duration_seconds` - Durée des tests
-- `test_total` - Nombre total de tests
-- `test_coverage_percent` - Couverture de code
-- `http_request_duration_seconds` - Temps de réponse API
-
-## 🚨 Alertes Configurées
-
-### Seuils d'Alerte
-
-| Métrique | Seuil | Action |
-|----------|-------|--------|
-| **CPU Usage** | > 80% | ⚠️ Warning |
-| **Memory Usage** | > 85% | ⚠️ Warning |
-| **Disk Usage** | > 90% | 🚨 Critical |
-| **Job Duration** | > 30min | ⚠️ Warning |
-| **Failed Jobs** | > 0 | 🚨 Critical |
-
-### Configuration des Alertes
-
-```yaml
-# prometheus/rules/ci-cd-alerts.yml
-groups:
-  - name: ci-cd-alerts
-    rules:
-      - alert: HighCPUUsage
-        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
-        for: 5m
-        labels:
-          severity: warning
-```
-
-## 📊 Scripts de Collecte
-
-### 1. **Metrics Collector** (`scripts/metrics-collector.js`)
-```javascript
-const { MetricsCollector } = require('./metrics-collector');
-
-const collector = new MetricsCollector();
-
-// Enregistrer une exécution de test
-collector.recordTestExecution('api', 'backend', 45.2, 'success');
-
-// Enregistrer la couverture
-collector.recordTestCoverage('backend', 'line', 85.5);
-```
-
-### 2. **Jenkins Metrics Exporter** (`scripts/jenkins-metrics-exporter.js`)
+### Sauvegarde
 ```bash
-# Démarrer l'exporteur
-npm start
+# Sauvegarder les données Prometheus
+docker cp idurar-prometheus:/prometheus ./backup/
 
-# Métriques disponibles
-curl http://localhost:9091/metrics
+# Sauvegarder les dashboards Grafana
+docker cp idurar-grafana:/var/lib/grafana ./backup/
 ```
 
-## 🔍 Requêtes Prometheus Utiles
-
-### Top 5 des Jobs les Plus Longs
-```promql
-topk(5, jenkins_job_duration_seconds)
-```
-
-### Utilisation CPU Moyenne
-```promql
-100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
-```
-
-### Taux de Succès des Tests
-```promql
-sum(rate(test_total{result="success"}[5m])) / sum(rate(test_total[5m])) * 100
-```
-
-### Consommation Mémoire des Conteneurs
-```promql
-container_memory_usage_bytes / container_spec_memory_limit_bytes * 100
-```
-
-## 🛠️ Maintenance
-
-### Sauvegarde des Données
+### Mise à jour
 ```bash
-# Sauvegarder Grafana
-docker exec idurar-grafana grafana-cli admin reset-admin-password newpassword
-
-# Sauvegarder Prometheus
-docker exec idurar-prometheus promtool tsdb create-blocks-from openmetrics /backup/metrics.txt /prometheus
-```
-
-### Nettoyage
-```bash
-# Nettoyer les anciennes métriques
-docker exec idurar-prometheus promtool tsdb clean --retention.time=200h /prometheus
-```
-
-### Mise à Jour
-```bash
-# Mettre à jour les dashboards
-docker-compose down
+# Mettre à jour les images
 docker-compose pull
 docker-compose up -d
 ```
 
-## 📚 Ressources
+## 🔍 Dépannage
 
-- [Prometheus Documentation](https://prometheus.io/docs/)
-- [Grafana Documentation](https://grafana.com/docs/)
-- [Jenkins Prometheus Plugin](https://plugins.jenkins.io/prometheus/)
-- [cAdvisor Documentation](https://github.com/google/cadvisor)
+### Problèmes courants
 
-## 🆘 Dépannage
+1. **Prometheus ne démarre pas**
+   - Vérifier la configuration YAML
+   - Vérifier les permissions des fichiers
 
-### Problèmes Courants
+2. **Grafana ne se connecte pas à Prometheus**
+   - Vérifier l'URL du datasource
+   - Vérifier la connectivité réseau
 
-1. **Grafana ne se connecte pas à Prometheus**
+3. **Métriques manquantes**
+   - Vérifier que les services sont up
+   - Vérifier la configuration des targets
+
+### Logs utiles
    ```bash
-   # Vérifier la connectivité
-   docker exec idurar-grafana curl http://prometheus:9090/api/v1/query?query=up
-   ```
+# Logs Prometheus
+docker logs idurar-prometheus
 
-2. **Métriques Jenkins manquantes**
-   ```bash
-   # Vérifier l'exporteur
-   curl http://localhost:9091/health
-   ```
+# Logs Grafana
+docker logs idurar-grafana
 
-3. **Alertes non déclenchées**
-   ```bash
-   # Vérifier les règles
-   docker exec idurar-prometheus promtool check rules /etc/prometheus/rules/ci-cd-alerts.yml
-   ```
-
-### Logs
-```bash
-# Voir les logs
-docker-compose logs -f grafana
-docker-compose logs -f prometheus
-docker-compose logs -f jenkins
+# Logs Alertmanager
+docker logs idurar-alertmanager
 ```
+
+## 📚 Documentation technique
+
+### Prometheus Queries
+```promql
+# CPU usage
+100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+# Memory usage
+(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+
+# Container memory
+container_memory_usage_bytes{name="idurar-frontend"}
+```
+
+### Grafana Variables
+- `$datasource` : Prometheus
+- `$interval` : 15s
+- `$time_range` : 1h
+
+## 🎯 Bonnes pratiques
+
+1. **Rétention des données** : 200h par défaut
+2. **Fréquence de collecte** : 15s pour les métriques critiques
+3. **Alertes** : Seuils progressifs (warning → critical)
+4. **Dashboards** : Organisés par fonctionnalité
+5. **Backup** : Automatique des configurations
 
 ---
 
-**🎉 Votre stack de monitoring CI/CD baseline est maintenant opérationnel !**
-
-Accédez à Grafana sur http://localhost:3001 pour visualiser vos métriques en temps réel.
-
+**Monitoring configuré et optimisé pour IDURAR ERP CRM** 📊
