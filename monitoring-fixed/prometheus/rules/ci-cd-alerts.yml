@@ -1,0 +1,47 @@
+groups:
+  - name: ci-cd-alerts
+    rules:
+      - alert: JenkinsBuildFailure
+        expr: jenkins_job_last_build_result == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Jenkins build failed"
+          description: "Build {{ $labels.job_name }} has failed"
+
+      - alert: JenkinsHighQueueSize
+        expr: jenkins_job_queue_size > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Jenkins queue size is high"
+          description: "Jenkins queue has {{ $value }} jobs waiting"
+
+      - alert: JenkinsHighMemoryUsage
+        expr: jenkins_memory_usage_bytes / 1024 / 1024 / 1024 > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Jenkins memory usage is high"
+          description: "Jenkins is using {{ $value }}GB of memory"
+
+      - alert: TestExecutionFailure
+        expr: test_total{result="failure"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Test execution failed"
+          description: "Test {{ $labels.test_suite }} failed"
+
+      - alert: HighTestDuration
+        expr: test_duration_seconds > 300
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Test execution is taking too long"
+          description: "Test {{ $labels.test_suite }} took {{ $value }} seconds"

@@ -1,0 +1,17 @@
+{
+  "name": "jenkins-metrics-exporter",
+  "version": "1.0.0",
+  "description": "Jenkins metrics exporter for Prometheus",
+  "main": "jenkins-metrics-exporter.js",
+  "scripts": {
+    "start": "node jenkins-metrics-exporter.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "prom-client": "^15.0.0"
+  },
+  "keywords": ["jenkins", "prometheus", "metrics", "monitoring"],
+  "author": "IDURAR Team",
+  "license": "MIT"
+}
