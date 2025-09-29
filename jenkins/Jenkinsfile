@@ -25,9 +25,9 @@ pipeline {
                     # Check if Node.js is already installed
                     if ! command -v node &> /dev/null; then
                         echo "Installing Node.js 18..."
-                        # Download and install Node.js 18
-                        curl -fsSL https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.xz -o node.tar.xz
-                        tar -xf node.tar.xz
+                        # Download and install Node.js 18 (using tar.gz instead of tar.xz)
+                        curl -fsSL https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.gz -o node.tar.gz
+                        tar -xzf node.tar.gz
                         export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                         echo "Node.js installed successfully"
                     else
