@@ -20,10 +20,12 @@ pipeline {
         
         stage('Setup Environment') {
             steps {
-                echo '🔧 Setting up Windows environment...'
+                echo '🔧 Setting up Linux environment...'
                 script {
-                    // Check if Node.js is available
-                    bat '''
+                    // Install Node.js if not available
+                    sh '''
+                        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+                        sudo apt-get install -y nodejs
                         node --version
                         npm --version
                     '''
@@ -34,7 +36,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo '📦 Installing dependencies...'
-                bat '''
+                sh '''
                     cd tests
                     npm install
                 '''
@@ -44,7 +46,7 @@ pipeline {
         stage('Backend Tests') {
             steps {
                 echo '🧪 Running Backend API Tests...'
-                bat '''
+                sh '''
                     cd tests
                     node backend-corrected.test.js
                 '''
@@ -54,7 +56,7 @@ pipeline {
         stage('Frontend Tests') {
             steps {
                 echo '🎨 Running Frontend Tests...'
-                bat '''
+                sh '''
                     cd tests
                     node frontend-simple.test.js
                 '''
@@ -64,7 +66,7 @@ pipeline {
         stage('Performance Tests') {
             steps {
                 echo '⚡ Running Performance Tests...'
-                bat '''
+                sh '''
                     cd tests
                     node performance-simple.test.js
                 '''
@@ -74,7 +76,7 @@ pipeline {
         stage('Full Test Suite') {
             steps {
                 echo '🚀 Running Complete Test Suite...'
-                bat '''
+                sh '''
                     cd tests
                     node test-runner.js
                 '''
