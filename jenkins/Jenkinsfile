@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:18-alpine'
-            args '-u root:root'
-        }
-    }
+    agent any
     
     options {
         timeout(time: 10, unit: 'MINUTES')
@@ -27,7 +22,19 @@ pipeline {
             steps {
                 echo '🔧 Setting up environment with Node.js 18...'
                 sh '''
-                    # Node.js is pre-installed in the Docker image
+                    # Check if Node.js is already installed
+                    if ! command -v node &> /dev/null; then
+                        echo "Installing Node.js 18..."
+                        # Download and install Node.js 18
+                        curl -fsSL https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.xz -o node.tar.xz
+                        tar -xf node.tar.xz
+                        export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                        echo "Node.js installed successfully"
+                    else
+                        echo "Node.js already installed"
+                    fi
+                    
+                    # Verify installation
                     node --version
                     npm --version
                 '''
@@ -38,6 +45,8 @@ pipeline {
             steps {
                 echo '📦 Installing dependencies...'
                 sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     npm install
                 '''
@@ -48,6 +57,8 @@ pipeline {
             steps {
                 echo '🧪 Running Backend API Tests...'
                 sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     node backend-corrected.test.js
                 '''
@@ -58,6 +69,8 @@ pipeline {
             steps {
                 echo '🎨 Running Frontend Tests...'
                 sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     node frontend-simple.test.js
                 '''
@@ -68,6 +81,8 @@ pipeline {
             steps {
                 echo '⚡ Running Performance Tests...'
                 sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     node performance-simple.test.js
                 '''
@@ -78,6 +93,8 @@ pipeline {
             steps {
                 echo '🚀 Running Complete Test Suite...'
                 sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     node test-runner.js
                 '''
