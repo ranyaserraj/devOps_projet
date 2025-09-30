@@ -10,6 +10,14 @@
 ## ⚡ Démarrage Rapide
 
 ### 🚀 Lancer l'application
+
+#### Version Optimisée (Recommandée)
+```bash
+docker-compose -f docker-compose-optimized.yml up -d
+```
+**Accès** : http://localhost:3001
+
+#### Version Standard
 ```bash
 docker-compose up -d
 ```
@@ -116,9 +124,18 @@ docker ps
 ```
 
 ### 3. Accéder à l'application
+
+#### Version Optimisée (Recommandée)
+- **Frontend** : http://localhost:3001
+- **Backend API** : http://localhost:5002
+- **Base de données** : localhost:27018
+- **Identifiants** : admin@admin.com / admin123
+
+#### Version Standard
 - **Frontend** : http://localhost:3000
-- **Backend API** : http://localhost:5000
+- **Backend API** : http://localhost:5001
 - **Base de données** : localhost:27017
+- **Identifiants** : admin@admin.com / admin123
 
 ## 🐳 Guide d'exécution détaillé
 
