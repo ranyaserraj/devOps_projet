@@ -26,7 +26,7 @@ services:
     container_name: idurar-backend
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       - NODE_ENV=development
       - DATABASE=mongodb://admin:password123@mongodb:27017/idurar_erp_crm?authSource=admin
@@ -51,7 +51,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - VITE_API_URL=http://localhost:5000
+      - VITE_API_URL=http://localhost:5001
     depends_on:
       - backend
     volumes:
@@ -66,3 +66,4 @@ volumes:
 networks:
   idurar-network:
     driver: bridge
+
