@@ -63,12 +63,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.optimized
+      args:
+        VITE_BACKEND_SERVER: http://localhost:5002/
     container_name: idurar-frontend-optimized
     restart: unless-stopped
     ports:
       - "3001:3000"  # Port différent pour éviter les conflits
     environment:
-      - VITE_API_URL=http://localhost:5002
+      - VITE_BACKEND_SERVER=http://localhost:5002/
     depends_on:
       - backend
     networks:

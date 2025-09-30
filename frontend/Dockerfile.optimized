@@ -16,6 +16,10 @@ RUN npm ci
 # Copier le code source
 COPY . .
 
+# Passer les arguments de build
+ARG VITE_BACKEND_SERVER
+ENV VITE_BACKEND_SERVER=$VITE_BACKEND_SERVER
+
 # Build de l'application pour la production
 RUN npm run build
 

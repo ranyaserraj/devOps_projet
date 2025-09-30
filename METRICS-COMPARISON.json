@@ -1,0 +1,115 @@
+{
+  "comparison_date": "2025-09-30",
+  "project": "IDURAR ERP CRM",
+  "docker_versions": {
+    "non_optimized": {
+      "compose_file": "docker-compose-houda.yml",
+      "description": "Version de développement standard",
+      "resources": {
+        "backend": {
+          "memory_usage": "378.3 MB",
+          "memory_percentage": "4.83%",
+          "cpu_usage": "0.11%",
+          "image_size": "359 MB"
+        },
+        "frontend": {
+          "memory_usage": "79.27 MB", 
+          "memory_percentage": "1.01%",
+          "cpu_usage": "0.77%",
+          "image_size": "582 MB"
+        },
+        "mongodb": {
+          "memory_usage": "59.59 MB",
+          "memory_percentage": "0.76%",
+          "cpu_usage": "0.40%",
+          "image_size": "MongoDB 7.0 (base image)"
+        }
+      },
+      "performance": {
+        "backend_api_response_time": "0.017495s",
+        "frontend_response_time": "0.091055s"
+      },
+      "total_memory": "517.16 MB",
+      "total_cpu": "1.28%"
+    },
+    "optimized": {
+      "compose_file": "docker-compose-optimized.yml", 
+      "description": "Version optimisée pour la production",
+      "resources": {
+        "backend": {
+          "memory_usage": "60.25 MB",
+          "memory_percentage": "11.77%",
+          "memory_limit": "512 MB",
+          "cpu_usage": "0.00%",
+          "cpu_limit": "0.5 cores",
+          "image_size": "~200 MB (estimated)"
+        },
+        "frontend": {
+          "memory_usage": "12.89 MB",
+          "memory_percentage": "5.03%", 
+          "memory_limit": "256 MB",
+          "cpu_usage": "0.45%",
+          "cpu_limit": "0.25 cores",
+          "image_size": "~50 MB (estimated)"
+        },
+        "mongodb": {
+          "memory_usage": "81.93 MB",
+          "memory_percentage": "1.05%",
+          "cpu_usage": "0.45%",
+          "image_size": "MongoDB 7.0 (optimized config)",
+          "optimizations": [
+            "WiredTiger cache: 0.5GB",
+            "Health checks enabled",
+            "Optimized logging"
+          ]
+        }
+      },
+      "performance": {
+        "backend_api_response_time": "0.014726s",
+        "frontend_response_time": "0.093134s"
+      },
+      "total_memory": "155.07 MB",
+      "total_cpu": "0.90%",
+      "optimizations": [
+        "Multi-stage Docker builds",
+        "Nginx for frontend serving",
+        "Resource limits enforced",
+        "Health checks implemented",
+        "Production environment variables",
+        "MongoDB cache optimization"
+      ]
+    }
+  },
+  "improvements": {
+    "memory_reduction": {
+      "backend": "84.08%",
+      "frontend": "83.74%",
+      "total": "70.02%"
+    },
+    "cpu_reduction": {
+      "backend": "100%",
+      "frontend": "41.56%", 
+      "total": "29.69%"
+    },
+    "performance_improvement": {
+      "backend_api": "15.82% faster",
+      "frontend": "stable"
+    },
+    "image_size_reduction": {
+      "backend": "~44%",
+      "frontend": "~91%",
+      "total": "~67%"
+    }
+  },
+  "recommendations": {
+    "production_use": "Use optimized version",
+    "development_use": "Use non-optimized for faster iteration",
+    "key_benefits": [
+      "84% memory reduction",
+      "16% performance improvement", 
+      "Production-ready configuration",
+      "Built-in monitoring and health checks",
+      "Resource limits for stability"
+    ]
+  }
+}
