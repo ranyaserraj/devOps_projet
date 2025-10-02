@@ -17,3 +17,5 @@ EXPOSE 9091
 # Start the application
 CMD ["node", "jenkins-metrics-exporter.js"]
 
+
+

@@ -1,9 +1,13 @@
 pipeline {
     agent any
     
+    options {
+        timeout(time: 10, unit: 'MINUTES')
+        timestamps()
+    }
+    
     environment {
         NODE_VERSION = '18'
-        NPM_CACHE = '/tmp/.npm'
     }
     
     stages {
@@ -16,19 +20,24 @@ pipeline {
         
         stage('Setup Environment') {
             steps {
-                echo '🔧 Setting up environment...'
-                script {
-                    // Install Node.js if not available
-                    sh '''
-                        if ! command -v node &> /dev/null; then
-                            echo "Installing Node.js..."
-                            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-                            sudo apt-get install -y nodejs
-                        fi
-                        node --version
-                        npm --version
-                    '''
-                }
+                echo '🔧 Setting up environment with Node.js 18...'
+                sh '''
+                    # Check if Node.js is already installed
+                    if ! command -v node &> /dev/null; then
+                        echo "Installing Node.js 18..."
+                        # Download and install Node.js 18 (using tar.gz instead of tar.xz)
+                        curl -fsSL https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.gz -o node.tar.gz
+                        tar -xzf node.tar.gz
+                        export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                        echo "Node.js installed successfully"
+                    else
+                        echo "Node.js already installed"
+                    fi
+                    
+                    # Verify installation
+                    node --version
+                    npm --version
+                '''
             }
         }
         
@@ -36,6 +45,8 @@ pipeline {
             steps {
                 echo '📦 Installing dependencies...'
                 sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     npm install
                 '''
@@ -46,6 +57,8 @@ pipeline {
             steps {
                 echo '🧪 Running Backend API Tests...'
                 sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     node backend-corrected.test.js
                 '''
@@ -56,6 +69,8 @@ pipeline {
             steps {
                 echo '🎨 Running Frontend Tests...'
                 sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     node frontend-simple.test.js
                 '''
@@ -66,6 +81,8 @@ pipeline {
             steps {
                 echo '⚡ Running Performance Tests...'
                 sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     node performance-simple.test.js
                 '''
@@ -76,6 +93,8 @@ pipeline {
             steps {
                 echo '🚀 Running Complete Test Suite...'
                 sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     node test-runner.js
                 '''
@@ -86,8 +105,6 @@ pipeline {
     post {
         always {
             echo '📊 Test execution completed!'
-            // Clean up workspace
-            cleanWs()
         }
         success {
             echo '✅ All tests passed successfully!'
@@ -97,5 +114,3 @@ pipeline {
         }
     }
 }
-
-

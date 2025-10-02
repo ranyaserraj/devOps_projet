@@ -1,10 +1,9 @@
 version: '3.8'
 
 services:
-  # Jenkins simple
   jenkins:
     image: jenkins/jenkins:lts-jdk17
-    container_name: jenkins-original
+    container_name: jenkins-network
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -16,8 +15,11 @@ services:
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
       - JENKINS_OPTS=--httpPort=8080
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - jenkins-network
+      - idurar-network
 
 volumes:
   jenkins_home:
@@ -25,6 +27,5 @@ volumes:
 networks:
   jenkins-network:
     driver: bridge
-
-
-
+  idurar-network:
+    external: true

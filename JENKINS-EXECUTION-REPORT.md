@@ -161,3 +161,5 @@ Pour toute question ou problème :
 - **Logs** : `docker logs jenkins-minimal`
 - **Tests** : `cd tests && node test-runner.js`
 - **Services** : `docker ps` pour vérifier le statut
+
+

@@ -1,0 +1,188 @@
+pipeline {
+    agent any
+    
+    options {
+        timeout(time: 15, unit: 'MINUTES')
+        timestamps()
+    }
+    
+    environment {
+        NODE_VERSION = '18'
+        BACKEND_URL = 'http://host.docker.internal:5000'
+        FRONTEND_URL = 'http://host.docker.internal:3000'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '📥 Checking out code from GitHub...'
+                git branch: 'master', url: 'https://github.com/ranyaserraj/devOps_projet.git'
+            }
+        }
+        
+        stage('Setup Environment') {
+            steps {
+                echo '🔧 Setting up environment with Node.js 18...'
+                sh '''
+                    # Check if Node.js is already installed
+                    if ! command -v node &> /dev/null; then
+                        echo "Installing Node.js 18..."
+                        # Download and install Node.js 18
+                        curl -fsSL https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.gz -o node.tar.gz
+                        tar -xzf node.tar.gz
+                        export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                        echo "Node.js installed successfully"
+                    else
+                        echo "Node.js already installed"
+                    fi
+                    
+                    # Verify installation
+                    node --version
+                    npm --version
+                '''
+            }
+        }
+        
+        stage('Network Connectivity Check') {
+            steps {
+                echo '🌐 Checking network connectivity to services...'
+                sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    
+                    echo "Testing connectivity to backend..."
+                    # Try different hostnames
+                    for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
+                        echo "Testing $host:5000..."
+                        if curl -s --connect-timeout 5 "$host:5000" > /dev/null 2>&1; then
+                            echo "✅ Backend accessible via $host:5000"
+                            export BACKEND_HOST="$host"
+                            break
+                        else
+                            echo "❌ Backend not accessible via $host:5000"
+                        fi
+                    done
+                    
+                    echo "Testing connectivity to frontend..."
+                    for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
+                        echo "Testing $host:3000..."
+                        if curl -s --connect-timeout 5 "$host:3000" > /dev/null 2>&1; then
+                            echo "✅ Frontend accessible via $host:3000"
+                            export FRONTEND_HOST="$host"
+                            break
+                        else
+                            echo "❌ Frontend not accessible via $host:3000"
+                        fi
+                    done
+                    
+                    # Show network info
+                    echo "Network configuration:"
+                    ip route show
+                    cat /etc/hosts
+                '''
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                echo '📦 Installing dependencies...'
+                sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    npm install
+                '''
+            }
+        }
+        
+        stage('Backend Tests') {
+            steps {
+                echo '🧪 Running Backend API Tests...'
+                sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    
+                    # Update test files to use correct host
+                    if [ -n "$BACKEND_HOST" ]; then
+                        echo "Using backend host: $BACKEND_HOST"
+                        # Create a modified test file
+                        sed "s/localhost:5000/$BACKEND_HOST:5000/g" backend-corrected.test.js > backend-modified.test.js
+                        node backend-modified.test.js
+                    else
+                        echo "⚠️ No accessible backend host found, running tests anyway..."
+                        node backend-corrected.test.js
+                    fi
+                '''
+            }
+        }
+        
+        stage('Frontend Tests') {
+            steps {
+                echo '🎨 Running Frontend Tests...'
+                sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    
+                    # Update test files to use correct host
+                    if [ -n "$FRONTEND_HOST" ]; then
+                        echo "Using frontend host: $FRONTEND_HOST"
+                        # Create a modified test file
+                        sed "s/localhost:3000/$FRONTEND_HOST:3000/g" frontend-simple.test.js > frontend-modified.test.js
+                        node frontend-modified.test.js
+                    else
+                        echo "⚠️ No accessible frontend host found, running tests anyway..."
+                        node frontend-simple.test.js
+                    fi
+                '''
+            }
+        }
+        
+        stage('Performance Tests') {
+            steps {
+                echo '⚡ Running Performance Tests...'
+                sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    
+                    # Update test files to use correct host
+                    if [ -n "$BACKEND_HOST" ]; then
+                        echo "Using backend host: $BACKEND_HOST"
+                        # Create a modified test file
+                        sed "s/localhost:5000/$BACKEND_HOST:5000/g" performance-simple.test.js > performance-modified.test.js
+                        node performance-modified.test.js
+                    else
+                        echo "⚠️ No accessible backend host found, running tests anyway..."
+                        node performance-simple.test.js
+                    fi
+                '''
+            }
+        }
+        
+        stage('Full Test Suite') {
+            steps {
+                echo '🚀 Running Complete Test Suite...'
+                sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    node test-runner.js
+                '''
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '📊 Test execution completed!'
+        }
+        success {
+            echo '✅ All tests passed successfully!'
+        }
+        failure {
+            echo '❌ Some tests failed!'
+        }
+    }
+}

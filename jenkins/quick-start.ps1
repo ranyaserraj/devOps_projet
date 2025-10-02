@@ -33,3 +33,5 @@ $duration = $endTime - $startTime
 Write-Host "⏱️  Duree totale: $($duration.TotalSeconds) secondes" -ForegroundColor Green
 Write-Host "✅ Tests completes avec succes!" -ForegroundColor Green
 Write-Host "🌱 Alternative Jenkins: Plus rapide et stable" -ForegroundColor Blue
+
+

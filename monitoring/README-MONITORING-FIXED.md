@@ -149,3 +149,5 @@ curl http://localhost:9091/metrics
 
 **✅ Jenkins avec monitoring corrigé et fonctionnel !** 🚀
 
+
+

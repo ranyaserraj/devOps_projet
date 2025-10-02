@@ -33,3 +33,5 @@ Write-Host "🎉 Tests exécutés avec succès via Jenkins Fast!" -ForegroundCol
 Write-Host "🌐 Jenkins disponible sur: http://localhost:8080/jenkins" -ForegroundColor Blue
 Write-Host "🔑 Mot de passe initial: 0e03b2f4717d491d96614e6c49c823ed" -ForegroundColor Yellow
 Write-Host "⚡ Configuration optimisée pour démarrage rapide" -ForegroundColor Green
+
+

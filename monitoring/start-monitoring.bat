@@ -85,3 +85,5 @@ cd ..
 
 echo ✅ Exporteur de métriques Jenkins démarré
 
+
+

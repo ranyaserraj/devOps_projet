@@ -48,3 +48,5 @@ Write-Host "   • Métriques: Collectées automatiquement" -ForegroundColor Whi
 Write-Host "   • Dashboards: Disponibles dans Grafana" -ForegroundColor White
 Write-Host "   • Alertes: Configurées dans Alertmanager" -ForegroundColor White
 
+
+

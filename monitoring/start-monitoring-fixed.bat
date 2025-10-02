@@ -48,3 +48,5 @@ echo    • Alertes: Configurées dans Alertmanager
 
 pause
 
+
+
