@@ -168,7 +168,16 @@ pipeline {
                     # Set up Node.js path
                     export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
-                    node test-runner.js
+                    
+                    # Use enhanced test-runner with environment variables
+                    echo "Using detected hosts: Backend=${BACKEND_HOST}, Frontend=${FRONTEND_HOST}"
+                    
+                    # Set environment variables for all tests
+                    export BACKEND_HOST="${BACKEND_HOST}"
+                    export FRONTEND_HOST="${FRONTEND_HOST}"
+                    
+                    # Run enhanced test-runner
+                    node test-runner-improved.js
                 '''
             }
         }
