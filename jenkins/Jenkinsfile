@@ -77,7 +77,10 @@ pipeline {
                     
                     # Show network info
                     echo "Network configuration:"
-                    ip route show
+                    echo "Hostname: $(hostname)"
+                    echo "Available network interfaces:"
+                    ifconfig 2>/dev/null || echo "ifconfig not available"
+                    echo "Hosts file:"
                     cat /etc/hosts
                 '''
             }
