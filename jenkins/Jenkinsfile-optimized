@@ -158,7 +158,7 @@ pipeline {
             }
         }
         
-        stage('Start Services') {
+        stage('Start Application Services') {
             steps {
                 echo '🚀 Starting backend and frontend services...'
                 sh '''
@@ -375,32 +375,6 @@ pipeline {
                     echo "- Optimization mode: ${OPTIMIZATION_MODE}"
                     echo "- Network optimization: Connection pooling enabled"
                     echo "- Memory optimization: Advanced caching enabled"
-                '''
-            }
-        }
-        
-        stage('Cleanup Services') {
-            steps {
-                echo '🧹 Cleaning up services...'
-                sh '''
-                    # Stop backend service
-                    if [ -f backend.pid ]; then
-                        BACKEND_PID=$(cat backend.pid)
-                        kill $BACKEND_PID 2>/dev/null || echo "Backend service already stopped"
-                        rm -f backend.pid
-                    fi
-                    
-                    # Stop frontend service
-                    if [ -f frontend.pid ]; then
-                        FRONTEND_PID=$(cat frontend.pid)
-                        kill $FRONTEND_PID 2>/dev/null || echo "Frontend service already stopped"
-                        rm -f frontend.pid
-                    fi
-                    
-                    # Clean up log files
-                    rm -f backend.log frontend.log
-                    
-                    echo "Services cleaned up successfully"
                 '''
             }
         }
