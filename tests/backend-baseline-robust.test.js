@@ -87,8 +87,8 @@ async function runBackendTests() {
     const responseTime = endTime - startTime;
     console.log(`✅ Performance test completed in ${responseTime}ms`);
     
-    const endTime = performance.now();
-    const totalDuration = endTime - startTime;
+    const totalEndTime = performance.now();
+    const totalDuration = totalEndTime - startTime;
     console.log(`⏱️  Total execution time: ${totalDuration.toFixed(2)}ms`);
     console.log('🎉 Optimized Backend API baseline tests completed successfully!');
     
