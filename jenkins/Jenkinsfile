@@ -160,6 +160,54 @@ pipeline {
             }
         }
         
+        stage('Heavy Performance Tests') {
+            steps {
+                echo '🔥 Running Heavy Performance Tests...'
+                sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    
+                    # Use detected hosts with heavy performance test
+                    echo "Using backend host: ${BACKEND_HOST}, frontend host: ${FRONTEND_HOST}"
+                    export API_URL="http://${BACKEND_HOST}:5000"
+                    export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
+                    node performance-heavy-baseline.test.js
+                '''
+            }
+        }
+        
+        stage('Integration Tests') {
+            steps {
+                echo '🔗 Running Integration Tests...'
+                sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    
+                    # Use detected hosts with integration test
+                    echo "Using backend host: ${BACKEND_HOST}, frontend host: ${FRONTEND_HOST}"
+                    export API_URL="http://${BACKEND_HOST}:5000"
+                    export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
+                    node integration-baseline.test.js
+                '''
+            }
+        }
+        
+        stage('Unit Tests') {
+            steps {
+                echo '🧪 Running Unit Tests...'
+                sh '''
+                    # Set up Node.js path
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    
+                    # Run unit tests (no network required)
+                    node unit-baseline.test.js
+                '''
+            }
+        }
+        
         stage('Full Test Suite') {
             steps {
                 echo '🚀 Running Complete Test Suite...'

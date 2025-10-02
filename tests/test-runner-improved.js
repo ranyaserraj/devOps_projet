@@ -59,6 +59,15 @@ async function runAllTests() {
     // Run Performance Tests with environment variables (using robust version)
     await runTest('performance-baseline-robust.test.js', 'Performance Tests', true);
     
+    // Run Heavy Performance Tests with environment variables
+    await runTest('performance-heavy-baseline.test.js', 'Heavy Performance Tests', true);
+    
+    // Run Integration Tests with environment variables
+    await runTest('integration-baseline.test.js', 'Integration Tests', true);
+    
+    // Run Unit Tests (no environment variables needed)
+    await runTest('unit-baseline.test.js', 'Unit Tests', false);
+    
     const totalTime = Date.now() - startTime;
     
     console.log('\n🎉 All baseline tests completed successfully!');
