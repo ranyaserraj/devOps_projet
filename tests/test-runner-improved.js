@@ -24,6 +24,8 @@ async function runTest(testFile, testName, useEnvVars = false) {
     if (useEnvVars) {
       env.BACKEND_HOST = backendHost;
       env.FRONTEND_HOST = frontendHost;
+      env.API_URL = `http://${backendHost}:5000`;
+      env.FRONTEND_URL = `http://${frontendHost}:3000`;
     }
     
     exec(`node ${testFile}`, { env }, (error, stdout, stderr) => {
