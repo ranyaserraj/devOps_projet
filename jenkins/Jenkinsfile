@@ -46,43 +46,55 @@ pipeline {
         stage('Network Connectivity Check') {
             steps {
                 echo '🌐 Checking network connectivity to services...'
-                sh '''
-                    # Set up Node.js path
-                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                script {
+                    // Set up Node.js path
+                    sh '''
+                        export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                        
+                        echo "Testing connectivity to backend..."
+                        # Try different hostnames
+                        for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
+                            echo "Testing $host:5000..."
+                            if curl -s --connect-timeout 5 "$host:5000" > /dev/null 2>&1; then
+                                echo "✅ Backend accessible via $host:5000"
+                                echo "$host" > backend_host.txt
+                                break
+                            else
+                                echo "❌ Backend not accessible via $host:5000"
+                            fi
+                        done
+                        
+                        echo "Testing connectivity to frontend..."
+                        for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
+                            echo "Testing $host:3000..."
+                            if curl -s --connect-timeout 5 "$host:3000" > /dev/null 2>&1; then
+                                echo "✅ Frontend accessible via $host:3000"
+                                echo "$host" > frontend_host.txt
+                                break
+                            else
+                                echo "❌ Frontend not accessible via $host:3000"
+                            fi
+                        done
+                        
+                        # Show network info
+                        echo "Network configuration:"
+                        echo "Hostname: $(hostname)"
+                        echo "Available network interfaces:"
+                        ifconfig 2>/dev/null || echo "ifconfig not available"
+                        echo "Hosts file:"
+                        cat /etc/hosts
+                    '''
                     
-                    echo "Testing connectivity to backend..."
-                    # Try different hostnames
-                    for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
-                        echo "Testing $host:5000..."
-                        if curl -s --connect-timeout 5 "$host:5000" > /dev/null 2>&1; then
-                            echo "✅ Backend accessible via $host:5000"
-                            export BACKEND_HOST="$host"
-                            break
-                        else
-                            echo "❌ Backend not accessible via $host:5000"
-                        fi
-                    done
+                    // Read the detected hosts
+                    def backendHost = sh(script: 'cat backend_host.txt 2>/dev/null || echo "localhost"', returnStdout: true).trim()
+                    def frontendHost = sh(script: 'cat frontend_host.txt 2>/dev/null || echo "localhost"', returnStdout: true).trim()
                     
-                    echo "Testing connectivity to frontend..."
-                    for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
-                        echo "Testing $host:3000..."
-                        if curl -s --connect-timeout 5 "$host:3000" > /dev/null 2>&1; then
-                            echo "✅ Frontend accessible via $host:3000"
-                            export FRONTEND_HOST="$host"
-                            break
-                        else
-                            echo "❌ Frontend not accessible via $host:3000"
-                        fi
-                    done
+                    // Set environment variables for subsequent stages
+                    env.BACKEND_HOST = backendHost
+                    env.FRONTEND_HOST = frontendHost
                     
-                    # Show network info
-                    echo "Network configuration:"
-                    echo "Hostname: $(hostname)"
-                    echo "Available network interfaces:"
-                    ifconfig 2>/dev/null || echo "ifconfig not available"
-                    echo "Hosts file:"
-                    cat /etc/hosts
-                '''
+                    echo "🌐 Detected hosts: Backend=$backendHost, Frontend=$frontendHost"
+                }
             }
         }
         
@@ -106,16 +118,11 @@ pipeline {
                     export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     
-                    # Update test files to use correct host
-                    if [ -n "$BACKEND_HOST" ]; then
-                        echo "Using backend host: $BACKEND_HOST"
-                        # Create a modified test file
-                        sed "s/localhost:5000/$BACKEND_HOST:5000/g" backend-corrected.test.js > backend-modified.test.js
-                        node backend-modified.test.js
-                    else
-                        echo "⚠️ No accessible backend host found, running tests anyway..."
-                        node backend-corrected.test.js
-                    fi
+                    # Use detected backend host
+                    echo "Using backend host: ${BACKEND_HOST}"
+                    # Create a modified test file
+                    sed "s/localhost:5000/${BACKEND_HOST}:5000/g" backend-corrected.test.js > backend-modified.test.js
+                    node backend-modified.test.js
                 '''
             }
         }
@@ -128,16 +135,11 @@ pipeline {
                     export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     
-                    # Update test files to use correct host
-                    if [ -n "$FRONTEND_HOST" ]; then
-                        echo "Using frontend host: $FRONTEND_HOST"
-                        # Create a modified test file
-                        sed "s/localhost:3000/$FRONTEND_HOST:3000/g" frontend-simple.test.js > frontend-modified.test.js
-                        node frontend-modified.test.js
-                    else
-                        echo "⚠️ No accessible frontend host found, running tests anyway..."
-                        node frontend-simple.test.js
-                    fi
+                    # Use detected frontend host
+                    echo "Using frontend host: ${FRONTEND_HOST}"
+                    # Create a modified test file
+                    sed "s/localhost:3000/${FRONTEND_HOST}:3000/g" frontend-simple.test.js > frontend-modified.test.js
+                    node frontend-modified.test.js
                 '''
             }
         }
@@ -150,16 +152,11 @@ pipeline {
                     export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     
-                    # Update test files to use correct host
-                    if [ -n "$BACKEND_HOST" ]; then
-                        echo "Using backend host: $BACKEND_HOST"
-                        # Create a modified test file
-                        sed "s/localhost:5000/$BACKEND_HOST:5000/g" performance-simple.test.js > performance-modified.test.js
-                        node performance-modified.test.js
-                    else
-                        echo "⚠️ No accessible backend host found, running tests anyway..."
-                        node performance-simple.test.js
-                    fi
+                    # Use detected backend host
+                    echo "Using backend host: ${BACKEND_HOST}"
+                    # Create a modified test file
+                    sed "s/localhost:5000/${BACKEND_HOST}:5000/g" performance-simple.test.js > performance-modified.test.js
+                    node performance-modified.test.js
                 '''
             }
         }
