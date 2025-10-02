@@ -50,14 +50,14 @@ async function runAllTests() {
   const startTime = Date.now();
   
   try {
-    // Run Backend API Tests with environment variables
-    await runTest('backend-simple.test.js', 'Backend API Tests', true);
+    // Run Backend API Tests with environment variables (using robust version)
+    await runTest('backend-baseline-robust.test.js', 'Backend API Tests', true);
     
     // Run Frontend Tests with environment variables  
     await runTest('frontend-simple.test.js', 'Frontend Tests', true);
     
-    // Run Performance Tests with environment variables
-    await runTest('performance-simple.test.js', 'Performance Tests', true);
+    // Run Performance Tests with environment variables (using robust version)
+    await runTest('performance-baseline-robust.test.js', 'Performance Tests', true);
     
     const totalTime = Date.now() - startTime;
     
