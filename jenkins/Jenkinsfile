@@ -118,11 +118,10 @@ pipeline {
                     export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     
-                    # Use detected backend host
+                    # Use detected backend host with robust test
                     echo "Using backend host: ${BACKEND_HOST}"
-                    # Create a modified test file
-                    sed "s/localhost:5000/${BACKEND_HOST}:5000/g" backend-corrected.test.js > backend-modified.test.js
-                    node backend-modified.test.js
+                    export API_URL="http://${BACKEND_HOST}:5000"
+                    node backend-baseline-robust.test.js
                 '''
             }
         }
@@ -152,11 +151,11 @@ pipeline {
                     export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                     cd tests
                     
-                    # Use detected backend host
-                    echo "Using backend host: ${BACKEND_HOST}"
-                    # Create a modified test file
-                    sed "s/localhost:5000/${BACKEND_HOST}:5000/g" performance-simple.test.js > performance-modified.test.js
-                    node performance-modified.test.js
+                    # Use detected hosts with robust test
+                    echo "Using backend host: ${BACKEND_HOST}, frontend host: ${FRONTEND_HOST}"
+                    export API_URL="http://${BACKEND_HOST}:5000"
+                    export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
+                    node performance-baseline-robust.test.js
                 '''
             }
         }
