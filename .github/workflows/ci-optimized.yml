@@ -1,0 +1,43 @@
+name: CI/CD Pipeline Optimized
+on:
+  push:
+    branches: [ master, optimization_test ]
+  pull_request:
+    branches: [ master, optimization_test ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        cd tests
+        npm ci
+    
+    - name: Run optimized tests
+      run: |
+        cd tests
+        export API_URL="http://localhost:5000"
+        export FRONTEND_URL="http://localhost:3000"
+        export MAX_CONCURRENCY=8
+        export OPTIMIZATION_MODE=true
+        node parallel-test-runner-optimized.js
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: tests/test-results/
