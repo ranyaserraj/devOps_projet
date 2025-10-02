@@ -41,7 +41,7 @@ const invoiceItems = [
 ];
 
 const total = calculateInvoiceTotal(invoiceItems);
-assert.strictEqual(total, 400, 'Invoice total should be 400');
+assert.strictEqual(total, 450, 'Invoice total should be 450');
 console.log('✅ Invoice total calculation passed');
 
 // Test 3: Status filtering

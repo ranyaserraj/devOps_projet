@@ -152,7 +152,7 @@ pipeline {
                     
                     # Check if services are running
                     echo "Checking service status..."
-                    curl -f http://host.docker.internal:5000/health || echo "Backend not ready yet"
+                    curl -f http://host.docker.internal:5000 || echo "Backend not ready yet"
                     curl -f http://host.docker.internal:3000 || echo "Frontend not ready yet"
                 '''
             }
@@ -186,7 +186,7 @@ pipeline {
                     
                     # Check if services are running
                     echo "Checking service status..."
-                    curl -f http://host.docker.internal:5000/health || echo "Backend not ready yet"
+                    curl -f http://host.docker.internal:5000 || echo "Backend not ready yet"
                     curl -f http://host.docker.internal:3000 || echo "Frontend not ready yet"
                 '''
             }
