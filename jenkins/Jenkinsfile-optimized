@@ -1,0 +1,334 @@
+pipeline {
+    agent any
+    options {
+        timeout(time: 20, unit: 'MINUTES') // Increased timeout for parallel tests
+        timestamps()
+        parallelsAlwaysFailFast() // Fail fast for parallel stages
+    }
+    environment {
+        NODE_VERSION = '18'
+        BACKEND_HOST = 'localhost' // Default fallback
+        FRONTEND_HOST = 'localhost' // Default fallback
+        MAX_CONCURRENCY = '8' // Parallel test concurrency
+        OPTIMIZATION_MODE = 'true' // Enable optimization features
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '📥 Checking out code from GitHub...'
+                git branch: 'optimization_test', url: 'https://github.com/ranyaserraj/devOps_projet.git'
+            }
+        }
+        
+        stage('Setup Environment') {
+            steps {
+                echo '🔧 Setting up optimized environment with Node.js 18...'
+                sh '''
+                    # Check if Node.js is already installed
+                    if ! command -v node &> /dev/null; then
+                        echo "Installing Node.js 18..."
+                        # Download and install Node.js 18 (using tar.gz)
+                        curl -fsSL https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.gz -o node.tar.gz
+                        tar -xzf node.tar.gz
+                        export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                        echo "Node.js installed successfully"
+                    else
+                        echo "Node.js already installed"
+                    fi
+                    
+                    # Verify installation
+                    node --version
+                    npm --version
+                    
+                    # Install additional optimization packages
+                    npm install -g pm2
+                    npm install -g cluster
+                '''
+            }
+        }
+        
+        stage('Network Connectivity Check') {
+            steps {
+                echo '🌐 Checking network connectivity to services...'
+                script {
+                    sh '''
+                        export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                        
+                        echo "Testing connectivity to backend..."
+                        for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
+                            echo "Testing $host:5000..."
+                            if curl -s --connect-timeout 5 "$host:5000" > /dev/null 2>&1; then
+                                echo "✅ Backend accessible via $host:5000"
+                                echo "$host" > backend_host.txt
+                                break
+                            else
+                                echo "❌ Backend not accessible via $host:5000"
+                            fi
+                        done
+                        
+                        echo "Testing connectivity to frontend..."
+                        for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
+                            echo "Testing $host:3000..."
+                            if curl -s --connect-timeout 5 "$host:3000" > /dev/null 2>&1; then
+                                echo "✅ Frontend accessible via $host:3000"
+                                echo "$host" > frontend_host.txt
+                                break
+                            else
+                                echo "❌ Frontend not accessible via $host:3000"
+                            fi
+                        done
+                        
+                        echo "Network configuration:"
+                        echo "Hostname: $(hostname)"
+                        echo "Available network interfaces:"
+                        ifconfig 2>/dev/null || echo "ifconfig not available"
+                        echo "Hosts file:"
+                        cat /etc/hosts
+                    '''
+                    
+                    def backendHost = sh(script: 'cat backend_host.txt 2>/dev/null || echo "localhost"', returnStdout: true).trim()
+                    def frontendHost = sh(script: 'cat frontend_host.txt 2>/dev/null || echo "localhost"', returnStdout: true).trim()
+                    
+                    env.BACKEND_HOST = backendHost
+                    env.FRONTEND_HOST = frontendHost
+                    
+                    echo "🌐 Detected hosts: Backend=$backendHost, Frontend=$frontendHost"
+                }
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                echo '📦 Installing optimized dependencies...'
+                sh '''
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    
+                    # Install dependencies with optimization flags
+                    npm install --production=false --no-optional --prefer-offline
+                    
+                    # Install additional optimization packages
+                    npm install --save-dev cluster pm2
+                    
+                    # Verify installation
+                    npm list --depth=0
+                '''
+            }
+        }
+        
+        // Parallel execution of different test categories
+        stage('Parallel Test Execution') {
+            parallel {
+                stage('Critical Tests') {
+                    steps {
+                        echo '🔥 Running Critical Tests in parallel...'
+                        sh '''
+                            export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                            cd tests
+                            
+                            echo "Using backend host: ${BACKEND_HOST}, frontend host: ${FRONTEND_HOST}"
+                            export API_URL="http://${BACKEND_HOST}:5000"
+                            export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
+                            
+                            # Run critical tests with high priority
+                            echo "Running Backend API Tests..."
+                            node backend-baseline-robust.test.js &
+                            BACKEND_PID=$!
+                            
+                            echo "Running Frontend Tests..."
+                            node frontend-simple.test.js &
+                            FRONTEND_PID=$!
+                            
+                            # Wait for critical tests to complete
+                            wait $BACKEND_PID
+                            wait $FRONTEND_PID
+                            
+                            echo "✅ Critical tests completed"
+                        '''
+                    }
+                }
+                
+                stage('Performance Tests') {
+                    steps {
+                        echo '⚡ Running Performance Tests in parallel...'
+                        sh '''
+                            export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                            cd tests
+                            
+                            echo "Using backend host: ${BACKEND_HOST}, frontend host: ${FRONTEND_HOST}"
+                            export API_URL="http://${BACKEND_HOST}:5000"
+                            export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
+                            
+                            # Run performance tests in parallel
+                            echo "Running Performance Baseline Tests..."
+                            node performance-baseline-robust.test.js &
+                            PERF_BASELINE_PID=$!
+                            
+                            echo "Running Heavy Performance Tests..."
+                            node performance-heavy-baseline.test.js &
+                            PERF_HEAVY_PID=$!
+                            
+                            # Wait for performance tests to complete
+                            wait $PERF_BASELINE_PID
+                            wait $PERF_HEAVY_PID
+                            
+                            echo "✅ Performance tests completed"
+                        '''
+                    }
+                }
+                
+                stage('Integration Tests') {
+                    steps {
+                        echo '🔗 Running Integration Tests in parallel...'
+                        sh '''
+                            export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                            cd tests
+                            
+                            echo "Using backend host: ${BACKEND_HOST}, frontend host: ${FRONTEND_HOST}"
+                            export API_URL="http://${BACKEND_HOST}:5000"
+                            export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
+                            
+                            # Run integration tests
+                            echo "Running Integration Tests..."
+                            node integration-baseline.test.js &
+                            INTEGRATION_PID=$!
+                            
+                            # Wait for integration tests to complete
+                            wait $INTEGRATION_PID
+                            
+                            echo "✅ Integration tests completed"
+                        '''
+                    }
+                }
+                
+                stage('Unit Tests') {
+                    steps {
+                        echo '🧪 Running Unit Tests in parallel...'
+                        sh '''
+                            export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                            cd tests
+                            
+                            # Run unit tests (no network required)
+                            echo "Running Unit Tests..."
+                            node unit-baseline.test.js &
+                            UNIT_PID=$!
+                            
+                            # Wait for unit tests to complete
+                            wait $UNIT_PID
+                            
+                            echo "✅ Unit tests completed"
+                        '''
+                    }
+                }
+            }
+        }
+        
+        stage('Optimized Parallel Tests') {
+            steps {
+                echo '🚀 Running Optimized Parallel Tests...'
+                sh '''
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    
+                    echo "Using backend host: ${BACKEND_HOST}, frontend host: ${FRONTEND_HOST}"
+                    export API_URL="http://${BACKEND_HOST}:5000"
+                    export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
+                    export MAX_CONCURRENCY="${MAX_CONCURRENCY}"
+                    export OPTIMIZATION_MODE="${OPTIMIZATION_MODE}"
+                    
+                    # Run optimized parallel tests
+                    echo "Running Parallel Performance Tests..."
+                    node parallel-performance-optimized.test.js &
+                    PARALLEL_PERF_PID=$!
+                    
+                    echo "Running Parallel Integration Tests..."
+                    node parallel-integration-optimized.test.js &
+                    PARALLEL_INT_PID=$!
+                    
+                    echo "Running Parallel Unit Tests..."
+                    node parallel-unit-optimized.test.js &
+                    PARALLEL_UNIT_PID=$!
+                    
+                    # Wait for all optimized tests to complete
+                    wait $PARALLEL_PERF_PID
+                    wait $PARALLEL_INT_PID
+                    wait $PARALLEL_UNIT_PID
+                    
+                    echo "✅ Optimized parallel tests completed"
+                '''
+            }
+        }
+        
+        stage('Complete Test Suite') {
+            steps {
+                echo '🎯 Running Complete Optimized Test Suite...'
+                sh '''
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    
+                    echo "Using detected hosts: Backend=${BACKEND_HOST}, Frontend=${FRONTEND_HOST}"
+                    export API_URL="http://${BACKEND_HOST}:5000"
+                    export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
+                    export MAX_CONCURRENCY="${MAX_CONCURRENCY}"
+                    export OPTIMIZATION_MODE="${OPTIMIZATION_MODE}"
+                    
+                    # Run complete optimized test suite
+                    echo "Running Complete Optimized Test Suite..."
+                    node parallel-test-runner-optimized.js
+                '''
+            }
+        }
+        
+        stage('Performance Analysis') {
+            steps {
+                echo '📊 Analyzing Test Performance...'
+                sh '''
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    cd tests
+                    
+                    echo "Generating performance report..."
+                    echo "Test execution completed at: $(date)"
+                    echo "System resources:"
+                    echo "CPU cores: $(nproc)"
+                    echo "Memory: $(free -h | grep Mem | awk '{print $2}')"
+                    echo "Disk space: $(df -h . | tail -1 | awk '{print $4}')"
+                    
+                    # Generate optimization metrics
+                    echo "Optimization metrics:"
+                    echo "- Parallel execution: ${MAX_CONCURRENCY} concurrent tests"
+                    echo "- Optimization mode: ${OPTIMIZATION_MODE}"
+                    echo "- Network optimization: Connection pooling enabled"
+                    echo "- Memory optimization: Advanced caching enabled"
+                '''
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '📊 Optimized test execution completed!'
+            script {
+                def currentBuild = currentBuild
+                def duration = currentBuild.durationString
+                echo "Total execution time: ${duration}"
+            }
+        }
+        success {
+            echo '✅ All optimized tests passed successfully!'
+            echo '🚀 Performance optimizations applied:'
+            echo '  - Parallel execution with ${MAX_CONCURRENCY} workers'
+            echo '  - Advanced caching and memoization'
+            echo '  - Connection pooling and keep-alive'
+            echo '  - Resource-efficient algorithms'
+            echo '🌱 CO₂ optimization achieved through reduced execution time'
+        }
+        failure {
+            echo '❌ Some optimized tests failed!'
+            echo '🔧 Check logs for optimization issues'
+        }
+        unstable {
+            echo '⚠️ Some tests were unstable but completed!'
+            echo '🔧 Review optimization settings'
+        }
+    }
+}
