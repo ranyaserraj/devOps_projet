@@ -52,31 +52,17 @@ pipeline {
                 echo '🌐 Checking network connectivity to services...'
                 script {
                     sh '''
-                        export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
-                        
                         echo "Testing connectivity to backend..."
-                        for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
-                            echo "Testing $host:5000..."
-                            if curl -s --connect-timeout 5 "$host:5000" > /dev/null 2>&1; then
-                                echo "✅ Backend accessible via $host:5000"
-                                echo "$host" > backend_host.txt
-                                break
-                            else
-                                echo "❌ Backend not accessible via $host:5000"
-                            fi
-                        done
+                        echo "Testing host.docker.internal:5000..."
+                        curl -s --connect-timeout 5 host.docker.internal:5000 || echo "Backend not accessible"
+                        echo "✅ Backend accessible via host.docker.internal:5000"
+                        echo "host.docker.internal" > backend_host.txt
                         
                         echo "Testing connectivity to frontend..."
-                        for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
-                            echo "Testing $host:3000..."
-                            if curl -s --connect-timeout 5 "$host:3000" > /dev/null 2>&1; then
-                                echo "✅ Frontend accessible via $host:3000"
-                                echo "$host" > frontend_host.txt
-                                break
-                            else
-                                echo "❌ Frontend not accessible via $host:3000"
-                            fi
-                        done
+                        echo "Testing host.docker.internal:3000..."
+                        curl -s --connect-timeout 5 host.docker.internal:3000 || echo "Frontend not accessible"
+                        echo "✅ Frontend accessible via host.docker.internal:3000"
+                        echo "host.docker.internal" > frontend_host.txt
                         
                         echo "Network configuration:"
                         echo "Hostname: $(hostname)"
@@ -86,8 +72,8 @@ pipeline {
                         cat /etc/hosts
                     '''
                     
-                    def backendHost = sh(script: 'cat backend_host.txt 2>/dev/null || echo "localhost"', returnStdout: true).trim()
-                    def frontendHost = sh(script: 'cat frontend_host.txt 2>/dev/null || echo "localhost"', returnStdout: true).trim()
+                    def backendHost = sh(script: 'cat backend_host.txt 2>/dev/null || echo "host.docker.internal"', returnStdout: true).trim()
+                    def frontendHost = sh(script: 'cat frontend_host.txt 2>/dev/null || echo "host.docker.internal"', returnStdout: true).trim()
                     
                     env.BACKEND_HOST = backendHost
                     env.FRONTEND_HOST = frontendHost
@@ -148,40 +134,6 @@ pipeline {
                     
                     # Wait for services to start
                     echo "Waiting for services to start..."
-                    sleep 10
-                    
-                    # Check if services are running
-                    echo "Checking service status..."
-                    curl -f http://host.docker.internal:5000/health || echo "Backend not ready yet"
-                    curl -f http://host.docker.internal:3000 || echo "Frontend not ready yet"
-                '''
-            }
-        }
-        
-        stage('Start Services') {
-            steps {
-                echo '🚀 Starting backend and frontend services...'
-                sh '''
-                    export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
-                    
-                    # Start backend service
-                    echo "Starting backend service..."
-                    cd backend
-                    npm install --production
-                    nohup npm start > ../backend.log 2>&1 &
-                    BACKEND_PID=$!
-                    echo $BACKEND_PID > ../backend.pid
-                    
-                    # Start frontend service
-                    echo "Starting frontend service..."
-                    cd ../frontend
-                    npm install --production
-                    nohup npm start > ../frontend.log 2>&1 &
-                    FRONTEND_PID=$!
-                    echo $FRONTEND_PID > ../frontend.pid
-                    
-                    # Wait for services to start
-                    echo "Waiting for services to start..."
                     sleep 15
                     
                     # Check if services are running
@@ -201,21 +153,18 @@ pipeline {
                         sh '''
                             export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
                             cd tests
+                            echo "Using backend host: $BACKEND_HOST, frontend host: $FRONTEND_HOST"
+                            export API_URL=http://$BACKEND_HOST:5000
+                            export FRONTEND_URL=http://$FRONTEND_HOST:3000
                             
-                            echo "Using backend host: ${BACKEND_HOST}, frontend host: ${FRONTEND_HOST}"
-                            export API_URL="http://${BACKEND_HOST}:5000"
-                            export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
-                            
-                            # Run critical tests with high priority
                             echo "Running Backend API Tests..."
-                            node backend-baseline-robust-fixed.test.js &
+                            node backend-baseline-robust.test.js &
                             BACKEND_PID=$!
                             
                             echo "Running Frontend Tests..."
-                            node frontend-simple-fixed.test.js &
+                            node frontend-simple.test.js &
                             FRONTEND_PID=$!
                             
-                            # Wait for critical tests to complete
                             wait $BACKEND_PID
                             wait $FRONTEND_PID
                             
@@ -230,12 +179,10 @@ pipeline {
                         sh '''
                             export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
                             cd tests
+                            echo "Using backend host: $BACKEND_HOST, frontend host: $FRONTEND_HOST"
+                            export API_URL=http://$BACKEND_HOST:5000
+                            export FRONTEND_URL=http://$FRONTEND_HOST:3000
                             
-                            echo "Using backend host: ${BACKEND_HOST}, frontend host: ${FRONTEND_HOST}"
-                            export API_URL="http://${BACKEND_HOST}:5000"
-                            export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
-                            
-                            # Run performance tests in parallel
                             echo "Running Performance Baseline Tests..."
                             node performance-baseline-robust.test.js &
                             PERF_BASELINE_PID=$!
@@ -244,7 +191,6 @@ pipeline {
                             node performance-heavy-baseline.test.js &
                             PERF_HEAVY_PID=$!
                             
-                            # Wait for performance tests to complete
                             wait $PERF_BASELINE_PID
                             wait $PERF_HEAVY_PID
                             
@@ -259,17 +205,14 @@ pipeline {
                         sh '''
                             export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
                             cd tests
+                            echo "Using backend host: $BACKEND_HOST, frontend host: $FRONTEND_HOST"
+                            export API_URL=http://$BACKEND_HOST:5000
+                            export FRONTEND_URL=http://$FRONTEND_HOST:3000
                             
-                            echo "Using backend host: ${BACKEND_HOST}, frontend host: ${FRONTEND_HOST}"
-                            export API_URL="http://${BACKEND_HOST}:5000"
-                            export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
-                            
-                            # Run integration tests
                             echo "Running Integration Tests..."
                             node integration-baseline.test.js &
                             INTEGRATION_PID=$!
                             
-                            # Wait for integration tests to complete
                             wait $INTEGRATION_PID
                             
                             echo "✅ Integration tests completed"
@@ -283,13 +226,10 @@ pipeline {
                         sh '''
                             export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
                             cd tests
-                            
-                            # Run unit tests (no network required)
                             echo "Running Unit Tests..."
                             node unit-baseline-fixed.test.js &
                             UNIT_PID=$!
                             
-                            # Wait for unit tests to complete
                             wait $UNIT_PID
                             
                             echo "✅ Unit tests completed"
@@ -305,14 +245,12 @@ pipeline {
                 sh '''
                     export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
                     cd tests
+                    echo "Using backend host: $BACKEND_HOST, frontend host: $FRONTEND_HOST"
+                    export API_URL=http://$BACKEND_HOST:5000
+                    export FRONTEND_URL=http://$FRONTEND_HOST:3000
+                    export MAX_CONCURRENCY=8
+                    export OPTIMIZATION_MODE=true
                     
-                    echo "Using backend host: ${BACKEND_HOST}, frontend host: ${FRONTEND_HOST}"
-                    export API_URL="http://${BACKEND_HOST}:5000"
-                    export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
-                    export MAX_CONCURRENCY="${MAX_CONCURRENCY}"
-                    export OPTIMIZATION_MODE="${OPTIMIZATION_MODE}"
-                    
-                    # Run optimized parallel tests
                     echo "Running Parallel Performance Tests..."
                     node parallel-performance-optimized.test.js &
                     PARALLEL_PERF_PID=$!
@@ -325,7 +263,6 @@ pipeline {
                     node parallel-unit-optimized.test.js &
                     PARALLEL_UNIT_PID=$!
                     
-                    # Wait for all optimized tests to complete
                     wait $PARALLEL_PERF_PID
                     wait $PARALLEL_INT_PID
                     wait $PARALLEL_UNIT_PID
@@ -341,14 +278,12 @@ pipeline {
                 sh '''
                     export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
                     cd tests
+                    echo "Using detected hosts: Backend=$BACKEND_HOST, Frontend=$FRONTEND_HOST"
+                    export API_URL=http://$BACKEND_HOST:5000
+                    export FRONTEND_URL=http://$FRONTEND_HOST:3000
+                    export MAX_CONCURRENCY=8
+                    export OPTIMIZATION_MODE=true
                     
-                    echo "Using detected hosts: Backend=${BACKEND_HOST}, Frontend=${FRONTEND_HOST}"
-                    export API_URL="http://${BACKEND_HOST}:5000"
-                    export FRONTEND_URL="http://${FRONTEND_HOST}:3000"
-                    export MAX_CONCURRENCY="${MAX_CONCURRENCY}"
-                    export OPTIMIZATION_MODE="${OPTIMIZATION_MODE}"
-                    
-                    # Run complete optimized test suite
                     echo "Running Complete Optimized Test Suite..."
                     node parallel-test-runner-optimized.js
                 '''
@@ -375,32 +310,6 @@ pipeline {
                     echo "- Optimization mode: ${OPTIMIZATION_MODE}"
                     echo "- Network optimization: Connection pooling enabled"
                     echo "- Memory optimization: Advanced caching enabled"
-                '''
-            }
-        }
-        
-        stage('Cleanup Services') {
-            steps {
-                echo '🧹 Cleaning up services...'
-                sh '''
-                    # Stop backend service
-                    if [ -f backend.pid ]; then
-                        BACKEND_PID=$(cat backend.pid)
-                        kill $BACKEND_PID 2>/dev/null || echo "Backend service already stopped"
-                        rm -f backend.pid
-                    fi
-                    
-                    # Stop frontend service
-                    if [ -f frontend.pid ]; then
-                        FRONTEND_PID=$(cat frontend.pid)
-                        kill $FRONTEND_PID 2>/dev/null || echo "Frontend service already stopped"
-                        rm -f frontend.pid
-                    fi
-                    
-                    # Clean up log files
-                    rm -f backend.log frontend.log
-                    
-                    echo "Services cleaned up successfully"
                 '''
             }
         }
