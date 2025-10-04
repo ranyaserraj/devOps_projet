@@ -17,24 +17,41 @@ pipeline {
         }
 stage('Install Dependencies') {
     steps {
-        echo '📦 Installing dependencies with cache'
-        dir('backend') {
-            cache(path: 'node_modules', key: 'backend-npm-cache') {
-                sh 'npm install --legacy-peer-deps'
-            }
-        }
-        dir('frontend') {
-            cache(path: 'node_modules', key: 'frontend-npm-cache') {
-                sh 'npm install --legacy-peer-deps'
-            }
-        }
-        dir('tests') {
-            cache(path: 'node_modules', key: 'tests-npm-cache') {
-                sh 'npm install --legacy-peer-deps'
-            }
-        }
+        echo '📦 Installing dependencies with manual cache'
+        sh '''
+        # === BACKEND ===
+        cd backend
+        if [ -f ../backend-cache.tar.gz ]; then
+            echo "📂 Restoring backend cache..."
+            tar -xzf ../backend-cache.tar.gz || echo "⚠️ No cache to restore"
+        fi
+        npm install --legacy-peer-deps
+        tar -czf ../backend-cache.tar.gz node_modules
+        cd ..
+
+        # === FRONTEND ===
+        cd frontend
+        if [ -f ../frontend-cache.tar.gz ]; then
+            echo "📂 Restoring frontend cache..."
+            tar -xzf ../frontend-cache.tar.gz || echo "⚠️ No cache to restore"
+        fi
+        npm install --legacy-peer-deps
+        tar -czf ../frontend-cache.tar.gz node_modules
+        cd ..
+
+        # === TESTS ===
+        cd tests
+        if [ -f ../tests-cache.tar.gz ]; then
+            echo "📂 Restoring tests cache..."
+            tar -xzf ../tests-cache.tar.gz || echo "⚠️ No cache to restore"
+        fi
+        npm install --legacy-peer-deps
+        tar -czf ../tests-cache.tar.gz node_modules
+        cd ..
+        '''
     }
 }
+
 
         stage('Build') {
             steps {
