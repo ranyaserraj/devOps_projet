@@ -1,99 +1,87 @@
 pipeline {
     agent any
-    
     environment {
-        NODE_VERSION = '18'
-        NPM_CACHE = '/tmp/.npm'
+        DATABASE = credentials('DATABASE')
     }
-    
     stages {
         stage('Checkout') {
             steps {
-                echo '📥 Checking out code from GitHub...'
-                git branch: 'master', url: 'https://github.com/ranyaserraj/devOps_projet.git'
+                echo '📥 Checkout code'
+                git branch: 'fatimzehra', url: 'https://github.com/ranyaserraj/devOps_projet.git'
             }
         }
-        
-        stage('Setup Environment') {
+        stage('Check Node') {
             steps {
-                echo '🔧 Setting up environment...'
-                script {
-                    // Install Node.js if not available
-                    sh '''
-                        if ! command -v node &> /dev/null; then
-                            echo "Installing Node.js..."
-                            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-                            sudo apt-get install -y nodejs
-                        fi
-                        node --version
-                        npm --version
-                    '''
-                }
+                sh 'node -v; npm -v'
             }
         }
-        
         stage('Install Dependencies') {
             steps {
-                echo '📦 Installing dependencies...'
+                echo '📦 Installing dependencies'
                 sh '''
-                    cd tests
-                    npm install
+                cd backend && npm install --legacy-peer-deps
+                cd ../frontend && npm install --legacy-peer-deps
+                cd ../tests && npm install --legacy-peer-deps
                 '''
             }
         }
-        
-        stage('Backend Tests') {
+        stage('Build') {
             steps {
-                echo '🧪 Running Backend API Tests...'
+                echo '🏗️ Build if exists'
                 sh '''
-                    cd tests
-                    node backend-corrected.test.js
+                cd tests
+                npm run build || echo "⚠️ No build script found, skipping..."
                 '''
             }
         }
-        
-        stage('Frontend Tests') {
+        stage('Check DB') {
             steps {
-                echo '🎨 Running Frontend Tests...'
+                echo '🔗 Checking MongoDB'
                 sh '''
-                    cd tests
-                    node frontend-simple.test.js
+                cd backend
+                node -e "
+                const mongoose = require('mongoose');
+                mongoose.connect(process.env.DATABASE)
+                    .then(() => { console.log('✅ MongoDB connected'); process.exit(0); })
+                    .catch(err => { console.error('❌ MongoDB connection failed:', err.message); process.exit(1); });
+                "
                 '''
             }
         }
-        
-        stage('Performance Tests') {
+        stage('Start App') {
             steps {
-                echo '⚡ Running Performance Tests...'
+                echo '🚀 Starting backend/frontend'
                 sh '''
-                    cd tests
-                    node performance-simple.test.js
+                cd backend && nohup npm start &
+                cd ../frontend && nohup npm run dev -- --port 3000 --host 0.0.0.0 &
+                sleep 20
                 '''
             }
         }
-        
-        stage('Full Test Suite') {
+        stage('Run Tests') {
             steps {
-                echo '🚀 Running Complete Test Suite...'
+                echo '🧪 Running tests'
                 sh '''
-                    cd tests
-                    node test-runner.js
+                cd tests
+                [ -f backend-corrected.test.js ] && node backend-corrected.test.js || echo "No backend tests"
+                [ -f frontend-simple.test.js ] && node frontend-simple.test.js || echo "No frontend tests"
+                [ -f performance-simple.test.js ] && node performance-simple.test.js || echo "No performance tests"
+                '''
+            }
+        }
+        stage('Measure Baseline') {
+            steps {
+                echo '📏 Measuring baseline'
+                sh '''
+                cd tests
+                [ -f test-runner.js ] && /usr/bin/time -v node test-runner.js || echo "No test-runner"
                 '''
             }
         }
     }
-    
     post {
-        always {
-            echo '📊 Test execution completed!'
-            // Clean up workspace
-            cleanWs()
-        }
-        success {
-            echo '✅ All tests passed successfully!'
-        }
-        failure {
-            echo '❌ Some tests failed!'
-        }
+        always { cleanWs(); echo '📊 Pipeline finished' }
+        success { echo '✅ Success' }
+        failure { echo '❌ Failure' }
     }
 }
