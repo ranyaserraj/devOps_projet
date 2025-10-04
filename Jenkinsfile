@@ -15,16 +15,27 @@ pipeline {
                 sh 'node -v; npm -v'
             }
         }
-        stage('Install Dependencies') {
-            steps {
-                echo '📦 Installing dependencies'
-                sh '''
-                cd backend && npm install --legacy-peer-deps
-                cd ../frontend && npm install --legacy-peer-deps
-                cd ../tests && npm install --legacy-peer-deps
-                '''
+stage('Install Dependencies') {
+    steps {
+        echo '📦 Installing dependencies with cache'
+        dir('backend') {
+            cache(path: 'node_modules', key: 'backend-npm-cache') {
+                sh 'npm install --legacy-peer-deps'
             }
         }
+        dir('frontend') {
+            cache(path: 'node_modules', key: 'frontend-npm-cache') {
+                sh 'npm install --legacy-peer-deps'
+            }
+        }
+        dir('tests') {
+            cache(path: 'node_modules', key: 'tests-npm-cache') {
+                sh 'npm install --legacy-peer-deps'
+            }
+        }
+    }
+}
+
         stage('Build') {
             steps {
                 echo '🏗️ Build if exists'
