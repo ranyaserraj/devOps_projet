@@ -80,6 +80,13 @@ stage('Install Dependencies') {
                 '''
             }
         }
+        stage('Cleanup') {
+    steps {
+        echo '🧹 Cleaning workspace'
+        sh 'docker system prune -f || true'
+    }
+}
+
         stage('Measure Baseline') {
             steps {
                 echo '📏 Measuring baseline'
