@@ -118,6 +118,26 @@ pipeline {
             }
         }
 
+        stage('Docker Build (with BuildKit & cache)') {
+    steps {
+        echo '🐳 Building Docker image with BuildKit & cache...'
+        sh '''
+        export DOCKER_BUILDKIT=1
+        docker buildx create --use || true
+        
+        mkdir -p $CACHE_DIR/docker-cache
+        
+        docker buildx build \
+            --progress=plain \
+            --cache-to type=local,dest=$CACHE_DIR/docker-cache \
+            --cache-from type=local,src=$CACHE_DIR/docker-cache \
+            -t devops-projet:latest \
+            .
+        '''
+    }
+}
+
+
         stage('Cleanup') {
             steps {
                 echo '🧹 Cleaning unused Docker resources...'
