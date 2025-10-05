@@ -1,4 +1,3 @@
-avec cache 
 pipeline {
     agent any
 
@@ -178,4 +177,3 @@ pipeline {
         }
     }
 }
-
