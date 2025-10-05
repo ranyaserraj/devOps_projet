@@ -35,3 +35,8 @@ Write-Host "🔑 Mot de passe initial: 0e03b2f4717d491d96614e6c49c823ed" -Foregr
 Write-Host "⚡ Configuration optimisée pour démarrage rapide" -ForegroundColor Green
 
 
+
+
+
+
+

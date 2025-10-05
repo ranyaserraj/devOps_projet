@@ -54,3 +54,8 @@ Write-Host "📋 Commandes utiles:" -ForegroundColor Yellow
 Write-Host "  - Voir les logs: docker logs jenkins-network" -ForegroundColor White
 Write-Host "  - Arrêter: docker-compose -f docker-compose-network.yml down" -ForegroundColor White
 Write-Host "  - Redémarrer: docker-compose -f docker-compose-network.yml restart" -ForegroundColor White
+
+
+
+
+

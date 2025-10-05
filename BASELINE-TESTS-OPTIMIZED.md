@@ -174,3 +174,8 @@ docker-compose -f docker-compose-minimal.yml up -d
 **Les tests baseline optimisés sont maintenant prêts pour une exécution efficace !** 🚀
 
 
+
+
+
+
+

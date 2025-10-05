@@ -191,3 +191,8 @@ curl -f http://host.docker.internal:3000
 - Consultez les logs Jenkins pour plus de détails
 - Vérifiez la configuration des services
 - Utilisez les scripts de diagnostic fournis
+
+
+
+
+

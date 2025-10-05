@@ -248,3 +248,8 @@ pipeline {
 **Jenkins configuré et optimisé pour IDURAR ERP CRM** 🔧
 
 
+
+
+
+
+

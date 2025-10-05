@@ -216,3 +216,8 @@ df -h
 **L'infrastructure de tests est prête pour une validation complète de l'application IDURAR ERP CRM !**
 
 
+
+
+
+
+

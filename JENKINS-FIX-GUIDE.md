@@ -192,3 +192,8 @@ Avec ces corrections, votre pipeline Jenkins devrait :
 - ✅ Aucun warning de version
 - ✅ Aucune vulnérabilité de sécurité
 - ✅ Performance optimisée
+
+
+
+
+

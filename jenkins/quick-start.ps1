@@ -35,3 +35,8 @@ Write-Host "✅ Tests completes avec succes!" -ForegroundColor Green
 Write-Host "🌱 Alternative Jenkins: Plus rapide et stable" -ForegroundColor Blue
 
 
+
+
+
+
+
