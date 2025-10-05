@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DATABASE = credentials('DATABASE')
-        CACHE_DIR = "/var/jenkins_home/npm-cache"  // Dossier persistant pour les caches
+        CACHE_DIR = "/var/jenkins_home/cache"  // Dossier persistant pour les caches
     }
 
     stages {
@@ -138,7 +138,6 @@ pipeline {
     post {
         always {
             echo '📊 Pipeline finished — cleaning workspace'
-            cleanWs()
         }
         success {
             echo '✅ Build completed successfully!'
