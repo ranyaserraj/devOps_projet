@@ -34,6 +34,16 @@ app.use(compression());
 // // default options
 // app.use(fileUpload());
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Here our API Routes
 
 app.use('/api', coreAuthRouter);

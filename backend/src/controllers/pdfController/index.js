@@ -1,7 +1,8 @@
 const pug = require('pug');
 const fs = require('fs');
 const moment = require('moment');
-let pdf = require('html-pdf');
+// Temporarily disable html-pdf to avoid module loading issues
+let pdf = null;
 const { listAllSettings, loadSettings } = require('@/middlewares/settings');
 const { getData } = require('@/middlewares/serverData');
 const useLanguage = require('@/locale/useLanguage');
@@ -67,16 +68,21 @@ exports.generatePdf = async (
         moment: moment,
       });
 
-      pdf
-        .create(htmlContent, {
-          format: info.format,
-          orientation: 'portrait',
-          border: '10mm',
-        })
-        .toFile(targetLocation, function (error) {
-          if (error) throw new Error(error);
-          if (callback) callback();
-        });
+      if (pdf) {
+        pdf
+          .create(htmlContent, {
+            format: info.format,
+            orientation: 'portrait',
+            border: '10mm',
+          })
+          .toFile(targetLocation, function (error) {
+            if (error) throw new Error(error);
+            if (callback) callback();
+          });
+      } else {
+        console.warn('PDF generation disabled - html-pdf module not available');
+        if (callback) callback();
+      }
     }
   } catch (error) {
     throw new Error(error);

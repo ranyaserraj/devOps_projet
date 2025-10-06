@@ -1,10 +1,10 @@
 version: '3.8'
 
 services:
-  # Prometheus pour collecter les métriques
+  # Prometheus - Collecte des métriques
   prometheus:
     image: prom/prometheus:latest
-    container_name: idurar-prometheus-monitoring
+    container_name: prometheus-monitoring
     restart: unless-stopped
     ports:
       - "9090:9090"
@@ -22,28 +22,46 @@ services:
     networks:
       - monitoring-network
 
-  # Grafana pour visualiser les métriques
+  # Grafana - Visualisation des métriques
   grafana:
     image: grafana/grafana:latest
-    container_name: idurar-grafana-monitoring
+    container_name: grafana-monitoring
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/var/lib/grafana/dashboards
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
-      - GF_USERS_ALLOW_SIGN_UP=false
     networks:
       - monitoring-network
 
-  # Node Exporter pour métriques système
+  # cAdvisor - Métriques des conteneurs Docker
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor-monitoring
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - monitoring-network
+
+  # Node Exporter - Métriques du système
   node-exporter:
     image: prom/node-exporter:latest
-    container_name: idurar-node-exporter-monitoring
+    container_name: node-exporter-monitoring
     restart: unless-stopped
     ports:
       - "9100:9100"
@@ -59,44 +77,10 @@ services:
     networks:
       - monitoring-network
 
-  # cAdvisor pour métriques conteneurs
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: idurar-cadvisor-monitoring
-    restart: unless-stopped
-    ports:
-      - "8081:8080"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    privileged: true
-    devices:
-      - /dev/kmsg
-    networks:
-      - monitoring-network
-
-  # Alertmanager pour les alertes
-  alertmanager:
-    image: prom/alertmanager:latest
-    container_name: idurar-alertmanager-monitoring
-    restart: unless-stopped
-    ports:
-      - "9093:9093"
-    volumes:
-      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
-      - alertmanager_data:/alertmanager
-    networks:
-      - monitoring-network
-
 volumes:
   prometheus_data:
   grafana_data:
-  alertmanager_data:
 
 networks:
   monitoring-network:
     driver: bridge
-

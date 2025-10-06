@@ -1,0 +1,116 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "DevOps Project - Updated Final",
+    "tags": ["devops", "updated", "final"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "CPU Usage - DevOps Project (Updated IDs)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{id=\"/docker/5cfcbc2637dac49d81fddbc107c9682701a3c58670fbe5a1b61718fb1187b3ea\"}[5m]) * 100",
+            "legendFormat": "Portainer"
+          },
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{id=\"/docker/5d589d2432e8c7339c5b3ca0f94ea6f06635ceac9bae393deb0b08ef9620d04d\"}[5m]) * 100",
+            "legendFormat": "MongoDB"
+          },
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{id=\"/docker/89f9b2a3e849c4859931281a4c38c8f7f6b10507f3cddbf9475a2343a723f0ca\"}[5m]) * 100",
+            "legendFormat": "Backend"
+          },
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{id=\"/docker/bf8d3ad60bd20765982a37a5105c3b445ce7906f0789d0ee7846ba531e9f0f70\"}[5m]) * 100",
+            "legendFormat": "Frontend (Updated)"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "CPU %",
+            "max": 100,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Memory Usage - DevOps Project (Updated IDs)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{id=\"/docker/5cfcbc2637dac49d81fddbc107c9682701a3c58670fbe5a1b61718fb1187b3ea\"} / 1024 / 1024",
+            "legendFormat": "Portainer"
+          },
+          {
+            "expr": "container_memory_usage_bytes{id=\"/docker/5d589d2432e8c7339c5b3ca0f94ea6f06635ceac9bae393deb0b08ef9620d04d\"} / 1024 / 1024",
+            "legendFormat": "MongoDB"
+          },
+          {
+            "expr": "container_memory_usage_bytes{id=\"/docker/89f9b2a3e849c4859931281a4c38c8f7f6b10507f3cddbf9475a2343a723f0ca\"} / 1024 / 1024",
+            "legendFormat": "Backend"
+          },
+          {
+            "expr": "container_memory_usage_bytes{id=\"/docker/bf8d3ad60bd20765982a37a5105c3b445ce7906f0789d0ee7846ba531e9f0f70\"} / 1024 / 1024",
+            "legendFormat": "Frontend (Updated)"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Memory MB",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "DevOps Project Summary (Updated)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{id=\"/docker/5cfcbc2637dac49d81fddbc107c9682701a3c58670fbe5a1b61718fb1187b3ea\"}[5m])) * 100",
+            "legendFormat": "Portainer CPU %"
+          },
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{id=\"/docker/5d589d2432e8c7339c5b3ca0f94ea6f06635ceac9bae393deb0b08ef9620d04d\"}[5m])) * 100",
+            "legendFormat": "MongoDB CPU %"
+          },
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{id=\"/docker/89f9b2a3e849c4859931281a4c38c8f7f6b10507f3cddbf9475a2343a723f0ca\"}[5m])) * 100",
+            "legendFormat": "Backend CPU %"
+          },
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{id=\"/docker/bf8d3ad60bd20765982a37a5105c3b445ce7906f0789d0ee7846ba531e9f0f70\"}[5m])) * 100",
+            "legendFormat": "Frontend CPU %"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "5s"
+  }
+}

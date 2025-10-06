@@ -4,7 +4,7 @@ services:
   # Base de données MongoDB
   mongodb:
     image: mongo:7.0
-    container_name: idurar-mongodb
+    container_name: idurar-mongodb-baseline
     restart: unless-stopped
     ports:
       - "27017:27017"
@@ -23,7 +23,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: idurar-backend
+    image: devops_projet-backend-baseline
+    container_name: idurar-backend-baseline
     restart: unless-stopped
     ports:
       - "5001:5000"
@@ -46,7 +47,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: idurar-frontend
+    image: devops_projet-frontend-baseline
+    container_name: idurar-frontend-baseline
     restart: unless-stopped
     ports:
       - "3000:3000"

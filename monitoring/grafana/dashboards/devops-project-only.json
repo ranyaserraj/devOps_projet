@@ -1,0 +1,168 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "DevOps Project - Conteneurs Uniquement",
+    "tags": ["devops", "project", "filtered"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "CPU Usage - DevOps Project",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{id=~\"/docker/(5cfcbc2637da|5d589d2432e8|89f9b2a3e849|d9a73acd0e03).*\"}[5m]) * 100",
+            "legendFormat": "{{id}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "CPU %",
+            "max": 100,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Memory Usage - DevOps Project",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{id=~\"/docker/(5cfcbc2637da|5d589d2432e8|89f9b2a3e849|d9a73acd0e03).*\"} / 1024 / 1024",
+            "legendFormat": "{{id}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Memory MB",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Network I/O - DevOps Project",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_network_receive_bytes_total{id=~\"/docker/(5cfcbc2637da|5d589d2432e8|89f9b2a3e849|d9a73acd0e03).*\"}[5m])",
+            "legendFormat": "{{id}} - RX"
+          },
+          {
+            "expr": "rate(container_network_transmit_bytes_total{id=~\"/docker/(5cfcbc2637da|5d589d2432e8|89f9b2a3e849|d9a73acd0e03).*\"}[5m])",
+            "legendFormat": "{{id}} - TX"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Disk I/O - DevOps Project",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_fs_reads_bytes_total{id=~\"/docker/(5cfcbc2637da|5d589d2432e8|89f9b2a3e849|d9a73acd0e03).*\"}[5m])",
+            "legendFormat": "{{id}} - Read"
+          },
+          {
+            "expr": "rate(container_fs_writes_bytes_total{id=~\"/docker/(5cfcbc2637da|5d589d2432e8|89f9b2a3e849|d9a73acd0e03).*\"}[5m])",
+            "legendFormat": "{{id}} - Write"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 5,
+        "title": "DevOps Project Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(container_cpu_usage_seconds_total{id=~\"/docker/(5cfcbc2637da|5d589d2432e8|89f9b2a3e849|d9a73acd0e03).*\"})",
+            "legendFormat": "DevOps Containers"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 8,
+          "x": 0,
+          "y": 24
+        }
+      },
+      {
+        "id": 6,
+        "title": "Total CPU - DevOps Project",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{id=~\"/docker/(5cfcbc2637da|5d589d2432e8|89f9b2a3e849|d9a73acd0e03).*\"}[5m])) * 100",
+            "legendFormat": "Total CPU %"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 8,
+          "x": 8,
+          "y": 24
+        }
+      },
+      {
+        "id": 7,
+        "title": "Total Memory - DevOps Project",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(container_memory_usage_bytes{id=~\"/docker/(5cfcbc2637da|5d589d2432e8|89f9b2a3e849|d9a73acd0e03).*\"}) / 1024 / 1024",
+            "legendFormat": "Total Memory MB"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 8,
+          "x": 16,
+          "y": 24
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "5s"
+  }
+}

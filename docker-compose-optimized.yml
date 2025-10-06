@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Base de données MongoDB optimisée
   mongodb:
@@ -18,7 +16,7 @@ services:
     networks:
       - idurar-network-optimized
     # Optimisations MongoDB
-    command: mongod --wiredTigerCacheSizeGB 0.5 --logpath /var/log/mongodb/mongod.log
+    command: mongod --wiredTigerCacheSizeGB 0.5 --logpath /var/log/mongodb/mongod.log --bind_ip_all
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s
@@ -44,10 +42,19 @@ services:
       mongodb:
         condition: service_healthy
     volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - ./backend/src:/app/src
+      - ./backend/package.json:/app/package.json
+      - ./backend/package-lock.json:/app/package-lock.json
+      - backend_node_modules:/app/node_modules
     networks:
       - idurar-network-optimized
+    # Health check pour le backend
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     # Limites de ressources
     deploy:
       resources:
@@ -72,9 +79,17 @@ services:
     environment:
       - VITE_BACKEND_SERVER=http://localhost:5002/
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - idurar-network-optimized
+    # Health check pour le frontend
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     # Limites de ressources
     deploy:
       resources:
@@ -85,8 +100,39 @@ services:
           memory: 128M
           cpus: '0.1'
 
+  # Monitoring simple avec Portainer
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: idurar-portainer-optimized
+    restart: unless-stopped
+    ports:
+      - "9000:9000"  # Interface web de Portainer
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - idurar-network-optimized
+    # Health check pour Portainer - utilise la commande la plus simple
+    healthcheck:
+      test: ["CMD", "/portainer", "--help"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # Limites de ressources pour Portainer
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.2'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+
 volumes:
   mongodb_data_optimized:
+  backend_node_modules:
+  portainer_data:
 
 networks:
   idurar-network-optimized:

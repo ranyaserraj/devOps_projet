@@ -1,11 +1,11 @@
 export const API_BASE_URL =
   import.meta.env.PROD || import.meta.env.VITE_DEV_REMOTE == 'remote'
     ? import.meta.env.VITE_BACKEND_SERVER + 'api/'
-    : 'http://localhost:5002/api/';
+    : 'http://localhost:5001/api/';
 export const BASE_URL =
   import.meta.env.PROD || import.meta.env.VITE_DEV_REMOTE
     ? import.meta.env.VITE_BACKEND_SERVER
-    : 'http://localhost:5002/';
+    : 'http://localhost:5001/';
 
 export const WEBSITE_URL = import.meta.env.PROD
   ? 'http://cloud.idurarapp.com/'
