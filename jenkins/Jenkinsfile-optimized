@@ -12,8 +12,32 @@ pipeline {
         MAX_CONCURRENCY = '8'
         OPTIMIZATION_MODE = 'true'
         SECURITY_AUDIT = 'true'
+        ENERGY_MONITORING_URL = 'http://localhost:9091'
+        BUILD_ID = "${BUILD_NUMBER}"
+        JOB_NAME = "${JOB_NAME}"
     }
     stages {
+        stage('Start Energy Monitoring') {
+            steps {
+                echo '🔋 Starting energy monitoring for optimized build...'
+                script {
+                    try {
+                        def response = sh(script: """
+                            curl -X POST ${ENERGY_MONITORING_URL}/start-monitoring \\
+                                -H "Content-Type: application/json" \\
+                                -d '{"buildId": "${BUILD_ID}", "jobName": "${JOB_NAME}", "buildType": "optimized"}' \\
+                                --connect-timeout 10 --max-time 30
+                        """, returnStdout: true)
+                        echo "✅ Energy monitoring started: ${response}"
+                        env.ENERGY_MONITORING_STARTED = "true"
+                    } catch (Exception e) {
+                        echo "⚠️ Failed to start energy monitoring: ${e.getMessage()}"
+                        env.ENERGY_MONITORING_STARTED = "false"
+                    }
+                }
+            }
+        }
+        
         stage('Checkout') {
             steps {
                 echo '📥 Checking out code from GitHub...'
@@ -413,6 +437,24 @@ pipeline {
                 def currentBuild = currentBuild
                 def duration = currentBuild.durationString
                 echo "Total execution time: ${duration}"
+                
+                // Stop energy monitoring
+                if (env.ENERGY_MONITORING_STARTED == "true") {
+                    try {
+                        def buildKey = "${JOB_NAME}-${BUILD_ID}"
+                        def status = currentBuild.result ?: 'completed'
+                        
+                        def response = sh(script: """
+                            curl -X POST ${ENERGY_MONITORING_URL}/stop-monitoring \\
+                                -H "Content-Type: application/json" \\
+                                -d '{"buildKey": "${buildKey}", "status": "${status}"}' \\
+                                --connect-timeout 10 --max-time 30
+                        """, returnStdout: true)
+                        echo "🔋 Energy monitoring stopped: ${response}"
+                    } catch (Exception e) {
+                        echo "⚠️ Failed to stop energy monitoring: ${e.getMessage()}"
+                    }
+                }
             }
         }
         success {

@@ -1,0 +1,85 @@
+groups:
+  - name: energy-monitoring
+    rules:
+      - alert: HighPowerConsumption
+        expr: system_power_consumption_watts > 200
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High power consumption detected"
+          description: "System power consumption is {{ $value }}W, which is above the threshold of 200W"
+
+      - alert: VeryHighPowerConsumption
+        expr: system_power_consumption_watts > 300
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Very high power consumption detected"
+          description: "System power consumption is {{ $value }}W, which is above the critical threshold of 300W"
+
+      - alert: LowEnergyEfficiency
+        expr: energy_efficiency_percent < 20
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low energy efficiency detected"
+          description: "Energy efficiency is {{ $value }}%, which is below the threshold of 20%"
+
+      - alert: HighCarbonFootprint
+        expr: carbon_footprint_kg_co2 > 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High carbon footprint detected"
+          description: "Carbon footprint is {{ $value }} kg CO2, which is above the threshold of 0.1 kg CO2"
+
+      - alert: JenkinsHighPowerUsage
+        expr: jenkins_power_consumption_watts > 50
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Jenkins high power usage"
+          description: "Jenkins power consumption is {{ $value }}W, which is above the threshold of 50W"
+
+      - alert: BuildEnergyConsumptionHigh
+        expr: jenkins_build_energy_consumption_wh > 0.5
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High build energy consumption"
+          description: "Build {{ $labels.job_name }} consumed {{ $value }}Wh of energy"
+
+      - alert: SystemOverheating
+        expr: system_cpu_usage_percent > 90 and system_power_consumption_watts > 150
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "System overheating detected"
+          description: "High CPU usage ({{ $labels.system_cpu_usage_percent }}%) and power consumption ({{ $labels.system_power_consumption_watts }}W) detected"
+
+      - alert: EnergyMonitoringDown
+        expr: up{job="energy-collector"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Energy monitoring system is down"
+          description: "The energy collector service is not responding"
+
+      - alert: JenkinsEnergyMonitoringDown
+        expr: up{job="jenkins-energy-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Jenkins energy monitoring is down"
+          description: "The Jenkins energy exporter service is not responding"
+
+

@@ -1,0 +1,43 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install system dependencies for energy monitoring
+RUN apk add --no-cache \
+    curl \
+    procps \
+    sysstat \
+    iotop \
+    htop \
+    powertop \
+    lm-sensors \
+    smartmontools \
+    python3 \
+    py3-psutil
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy application files
+COPY . .
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Change ownership
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+# Expose port
+EXPOSE 9094
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:9094/health || exit 1
+
+# Start the application
+CMD ["node", "energy-collector.js"]

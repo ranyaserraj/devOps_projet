@@ -19,6 +19,16 @@ export default ({ mode }) => {
         '@': path.resolve(__dirname, 'src'),
       },
     },
+    optimizeDeps: {
+      exclude: [
+        'chunk-QP5QJGNQ',
+        'chunk-SCDDUDAR', 
+        'chunk-QVTLDHJL',
+        'chunk-4MJ6WTLR',
+        'chunk-JSXKMBMK'
+      ],
+      force: true
+    },
     server: {
       port: 3000,
       proxy: {

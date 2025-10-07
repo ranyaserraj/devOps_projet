@@ -1,0 +1,170 @@
+version: '3.8'
+
+services:
+  # Prometheus - Metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: idurar-prometheus-energy
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus-energy.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/rules:/etc/prometheus/rules
+      - prometheus_energy_data:/prometheus
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - energy-monitoring
+
+  # Grafana - Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: idurar-grafana-energy
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_energy_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-clock-panel
+    networks:
+      - energy-monitoring
+
+  # Node Exporter - System metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: idurar-node-exporter-energy
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.systemd'
+      - '--collector.cpu'
+      - '--collector.meminfo'
+      - '--collector.diskstats'
+      - '--collector.netdev'
+    networks:
+      - energy-monitoring
+
+  # cAdvisor - Container metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: idurar-cadvisor-energy
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - energy-monitoring
+
+  # Jenkins Energy Metrics Exporter - connecté au Jenkins existant sur port 8080
+  jenkins-energy-exporter:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.energy
+    container_name: idurar-jenkins-energy-exporter
+    restart: unless-stopped
+    ports:
+      - "9091:9091"
+    environment:
+      - JENKINS_URL=http://host.docker.internal:8080
+      - JENKINS_USER=${JENKINS_USER:-admin}
+      - JENKINS_TOKEN=${JENKINS_TOKEN:-}
+      - PROMETHEUS_GATEWAY=http://prometheus:9090
+      - JENKINS_AUTH_DISABLED=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./scripts:/app
+    networks:
+      - energy-monitoring
+    depends_on:
+      - prometheus
+
+  # Jenkins existant - pas de conteneur séparé, utilisation du Jenkins sur port 8080
+
+  # Alertmanager - Alert handling
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: idurar-alertmanager-energy
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager-energy.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_energy_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - energy-monitoring
+
+  # Energy Metrics Collector
+  energy-collector:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.energy-collector
+    container_name: idurar-energy-collector
+    restart: unless-stopped
+    ports:
+      - "9094:9094"
+    environment:
+      - PROMETHEUS_URL=http://prometheus:9090
+      - JENKINS_URL=http://host.docker.internal:8080
+      - COLLECTION_INTERVAL=30
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - energy-monitoring
+    depends_on:
+      - prometheus
+
+  # Jenkins Test Metrics (pour tester les métriques sans authentification Jenkins)
+  jenkins-test-metrics:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.test
+    container_name: idurar-jenkins-test-metrics
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    networks:
+      - energy-monitoring
+
+networks:
+  energy-monitoring:
+    driver: bridge
+
+volumes:
+  prometheus_energy_data:
+  grafana_energy_data:
+  alertmanager_energy_data:

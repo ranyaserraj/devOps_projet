@@ -7,15 +7,5 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
     editable: true
-    jsonData:
-      httpMethod: POST
-      queryTimeout: 60s
-      timeInterval: 15s
-
-
-
-
-
-
 
 
