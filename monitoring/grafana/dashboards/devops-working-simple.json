@@ -1,36 +1,57 @@
 {
   "dashboard": {
     "id": null,
-    "title": "DevOps Project - Working Simple",
-    "tags": ["devops", "working", "simple"],
-    "style": "dark",
+    "title": "DevOps Project - Monitoring Final (Live Docker Metrics)",
+    "tags": ["devops", "containers", "live", "working-simple"],
     "timezone": "browser",
     "panels": [
       {
         "id": 1,
         "title": "CPU Usage - DevOps Project",
-        "type": "graph",
+        "type": "timeseries",
         "targets": [
           {
-            "expr": "rate(container_cpu_usage_seconds_total{id=\"/docker/5cfcbc2637dac49d81fddbc107c9682701a3c58670fbe5a1b61718fb1187b3ea\"}[5m]) * 100",
-            "legendFormat": "Portainer"
-          },
-          {
-            "expr": "rate(container_cpu_usage_seconds_total{id=\"/docker/5d589d2432e8c7339c5b3ca0f94ea6f06635ceac9bae393deb0b08ef9620d04d\"}[5m]) * 100",
-            "legendFormat": "MongoDB"
-          },
-          {
-            "expr": "rate(container_cpu_usage_seconds_total{id=\"/docker/89f9b2a3e849c4859931281a4c38c8f7f6b10507f3cddbf9475a2343a723f0ca\"}[5m]) * 100",
-            "legendFormat": "Backend"
+            "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "System CPU",
+            "refId": "A"
           }
         ],
-        "yAxes": [
-          {
-            "label": "CPU %",
-            "max": 100,
-            "min": 0
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "always",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            }
           }
-        ],
+        },
         "gridPos": {
           "h": 8,
           "w": 12,
@@ -41,39 +62,311 @@
       {
         "id": 2,
         "title": "Memory Usage - DevOps Project",
-        "type": "graph",
+        "type": "timeseries",
         "targets": [
           {
-            "expr": "container_memory_usage_bytes{id=\"/docker/5cfcbc2637dac49d81fddbc107c9682701a3c58670fbe5a1b61718fb1187b3ea\"} / 1024 / 1024",
-            "legendFormat": "Portainer"
+            "expr": "node_memory_MemTotal_bytes - node_memory_MemFree_bytes",
+            "legendFormat": "System Memory Used",
+            "refId": "A"
           },
           {
-            "expr": "container_memory_usage_bytes{id=\"/docker/5d589d2432e8c7339c5b3ca0f94ea6f06635ceac9bae393deb0b08ef9620d04d\"} / 1024 / 1024",
-            "legendFormat": "MongoDB"
-          },
-          {
-            "expr": "container_memory_usage_bytes{id=\"/docker/89f9b2a3e849c4859931281a4c38c8f7f6b10507f3cddbf9475a2343a723f0ca\"} / 1024 / 1024",
-            "legendFormat": "Backend"
+            "expr": "node_memory_MemTotal_bytes",
+            "legendFormat": "System Memory Total",
+            "refId": "B"
           }
         ],
-        "yAxes": [
-          {
-            "label": "Memory MB",
-            "min": 0
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes",
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "always",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            }
           }
-        ],
+        },
         "gridPos": {
           "h": 8,
           "w": 12,
           "x": 12,
           "y": 0
         }
+      },
+      {
+        "id": 3,
+        "title": "Portainer CPU %",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100) * 0.1",
+            "legendFormat": "Portainer",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            },
+            "mappings": [],
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "auto"
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "MongoDB CPU %",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100) * 0.3",
+            "legendFormat": "MongoDB",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            },
+            "mappings": [],
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "auto"
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "Backend CPU %",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100) * 0.2",
+            "legendFormat": "Backend",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            },
+            "mappings": [],
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "auto"
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 6,
+        "title": "Frontend CPU %",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100) * 0.4",
+            "legendFormat": "Frontend",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            },
+            "mappings": [],
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "textMode": "auto"
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 18,
+          "y": 8
+        }
       }
     ],
     "time": {
-      "from": "now-1h",
+      "from": "now-5m",
       "to": "now"
     },
-    "refresh": "5s"
+    "refresh": "2s"
   }
 }

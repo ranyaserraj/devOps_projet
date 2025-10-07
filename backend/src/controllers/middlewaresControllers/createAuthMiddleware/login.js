@@ -28,9 +28,8 @@ const login = async (req, res, { userModel }) => {
     });
   }
 
-  const user = await UserModel.findOne({ email: email, removed: false });
+  const user = await UserModel.findOne({ email: email, removed: false }).sort({ created: -1 });
 
-  // console.log(user);
   if (!user)
     return res.status(404).json({
       success: false,

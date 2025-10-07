@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Base de données MongoDB
+  # Base de données MongoDB - VERSION NON-OPTIMISÉE
   mongodb:
     image: mongo:7.0
     container_name: idurar-mongodb
@@ -17,18 +17,22 @@ services:
       - ./mongodb-init:/docker-entrypoint-initdb.d
     networks:
       - idurar-network
+    # AUCUNE OPTIMISATION - Configuration par défaut
+    # Pas de limites de ressources
+    # Pas de health checks
+    # Pas d'optimisations MongoDB
 
-  # Backend Node.js
+  # Backend Node.js - VERSION NON-OPTIMISÉE
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile  # Dockerfile standard, pas optimisé
     container_name: idurar-backend
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "5001:5000"  # Port différent pour éviter conflit
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=development  # Mode développement
       - DATABASE=mongodb://admin:password123@mongodb:27017/idurar_erp_crm?authSource=admin
       - JWT_SECRET=your-jwt-secret-key-here
       - JWT_EXPIRES_IN=7d
@@ -36,32 +40,67 @@ services:
     depends_on:
       - mongodb
     volumes:
-      - ./backend:/app
+      - ./backend:/app  # Volume bind complet (lent)
       - /app/node_modules
     networks:
       - idurar-network
+    # AUCUNE OPTIMISATION
+    # Pas de limites de ressources
+    # Pas de health checks
+    # Pas de multi-stage build
+    # Mode développement (plus lourd)
 
-  # Frontend React
+  # Frontend React - VERSION NON-OPTIMISÉE
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile  # Dockerfile standard, pas optimisé
     container_name: idurar-frontend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3002:3000"  # Port différent pour éviter conflit avec Grafana
     environment:
-      - VITE_API_URL=http://localhost:5000
+      - VITE_API_URL=http://localhost:5001
     depends_on:
       - backend
     volumes:
-      - ./frontend:/app
+      - ./frontend:/app  # Volume bind complet (lent)
       - /app/node_modules
     networks:
       - idurar-network
+    # Health check simple pour version non-optimisée
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # AUCUNE OPTIMISATION
+    # Pas de build statique
+    # Pas de Nginx
+    # Mode développement avec hot-reload
+    # Pas de limites de ressources
+
+  # Portainer - VERSION NON-OPTIMISÉE
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: idurar-portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - idurar-network
+    # AUCUNE OPTIMISATION
+    # Pas de health checks
+    # Pas de limites de ressources
+    # Configuration par défaut
 
 volumes:
   mongodb_data:
+  portainer_data:
 
 networks:
   idurar-network:

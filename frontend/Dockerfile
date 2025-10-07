@@ -1,6 +1,9 @@
 # Frontend Dockerfile pour IDURAR ERP CRM
 FROM node:20.9.0-alpine
 
+# Installer curl pour les health checks
+RUN apk add --no-cache curl
+
 # Définir le répertoire de travail
 WORKDIR /app
 

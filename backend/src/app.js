@@ -44,9 +44,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Setup endpoint (no authentication required)
+const setup = require('./controllers/coreControllers/setup');
+app.post('/api/setup', setup);
+
 // Here our API Routes
 
-app.use('/api', coreAuthRouter);
+app.use('/api/auth', coreAuthRouter);
 app.use('/api', adminAuth.isValidAuthToken, coreApiRouter);
 app.use('/api', adminAuth.isValidAuthToken, erpApiRouter);
 app.use('/download', coreDownloadRouter);

@@ -1,0 +1,115 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "DevOps Project - Version Non-Optimisée (Complet)",
+    "tags": ["devops", "non-optimized", "complete"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "CPU Usage - Conteneurs Non-Optimisés",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=~\"idurar.*\"}[5m]) * 100",
+            "legendFormat": "{{name}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "CPU %",
+            "max": 100,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Memory Usage - Conteneurs Non-Optimisés",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{name=~\"idurar.*\"} / 1024 / 1024",
+            "legendFormat": "{{name}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Memory MB",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Résumé - Version Non-Optimisée",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{name=~\"idurar.*\"}[5m])) * 100",
+            "legendFormat": "CPU Total %"
+          },
+          {
+            "expr": "sum(container_memory_usage_bytes{name=~\"idurar.*\"}) / 1024 / 1024",
+            "legendFormat": "RAM Total MB"
+          },
+          {
+            "expr": "count(container_memory_usage_bytes{name=~\"idurar.*\"})",
+            "legendFormat": "Conteneurs Actifs"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Network I/O - Conteneurs Non-Optimisés",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_network_receive_bytes_total{name=~\"idurar.*\"}[5m])",
+            "legendFormat": "{{name}} - RX"
+          },
+          {
+            "expr": "rate(container_network_transmit_bytes_total{name=~\"idurar.*\"}[5m])",
+            "legendFormat": "{{name}} - TX"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bytes/s",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 14
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "5s"
+  }
+}

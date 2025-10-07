@@ -1,0 +1,157 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "DevOps Project - Monitoring Final",
+    "tags": ["devops", "containers", "monitoring", "docker-stats"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "CPU Usage - DevOps Project",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "System CPU"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "CPU %",
+            "max": 5,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "legend": {
+          "show": true,
+          "values": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "avg": false,
+          "total": false
+        },
+        "lines": true,
+        "linewidth": 2,
+        "points": true,
+        "pointradius": 3,
+        "fill": 0,
+        "thresholds": [],
+        "colors": ["#73BF69"]
+      },
+      {
+        "id": 2,
+        "title": "Memory Usage - DevOps Project",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1024 / 1024",
+            "legendFormat": "System Memory Used"
+          },
+          {
+            "expr": "node_memory_MemTotal_bytes / 1024 / 1024",
+            "legendFormat": "System Memory Total"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Memory (MB)",
+            "max": 600,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "legend": {
+          "show": true,
+          "values": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "avg": false,
+          "total": false
+        },
+        "lines": true,
+        "linewidth": 2,
+        "points": true,
+        "pointradius": 3,
+        "fill": 0,
+        "thresholds": [],
+        "colors": ["#F2CC0C", "#F2495C"]
+      },
+      {
+        "id": 3,
+        "title": "DevOps Project Summary",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "System CPU %"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 50
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            },
+            "unit": "percent",
+            "decimals": 4
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "horizontal",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        }
+      }
+    ],
+    "time": {
+      "from": "now-5m",
+      "to": "now"
+    },
+    "refresh": "5s",
+    "schemaVersion": 27,
+    "version": 1,
+    "links": []
+  }
+}

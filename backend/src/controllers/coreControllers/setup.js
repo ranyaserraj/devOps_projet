@@ -3,20 +3,22 @@ require('dotenv').config({ path: '.env.local' });
 const { globSync } = require('glob');
 const fs = require('fs');
 const { generate: uniqueId } = require('shortid');
+const Joi = require('joi');
 
 const mongoose = require('mongoose');
 
 const setup = async (req, res) => {
-  const Admin = mongoose.model('Admin');
-  const AdminPassword = mongoose.model('AdminPassword');
-  const Setting = mongoose.model('Setting');
+  try {
+    const Admin = mongoose.model('Admin');
+    const AdminPassword = mongoose.model('AdminPassword');
+    const Setting = mongoose.model('Setting');
 
-  const PaymentMode = mongoose.model('PaymentMode');
-  const Taxes = mongoose.model('Taxes');
+    const PaymentMode = mongoose.model('PaymentMode');
+    const Taxes = mongoose.model('Taxes');
 
-  const newAdminPassword = new AdminPassword();
+    const newAdminPassword = new AdminPassword();
 
-  const { name, email, password, language, timezone, country, config = {} } = req.body;
+    const { name, email, password, language, timezone, country, config = {} } = req.body;
 
   const objectSchema = Joi.object({
     name: Joi.string().required(),
@@ -45,6 +47,7 @@ const setup = async (req, res) => {
     email,
     name,
     role: 'owner',
+    enabled: true,
   };
   const result = await new Admin(accountOwnner).save();
 
@@ -96,6 +99,15 @@ const setup = async (req, res) => {
     result: {},
     message: 'Successfully IDURAR App Setup',
   });
+  } catch (error) {
+    console.error('Setup error:', error);
+    return res.status(500).json({
+      success: false,
+      result: null,
+      message: 'Setup failed',
+      error: error.message,
+    });
+  }
 };
 
 module.exports = setup;

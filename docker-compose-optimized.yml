@@ -121,6 +121,7 @@ services:
       start_period: 30s
     # Limites de ressources pour Portainer
     deploy:
+    
       resources:
         limits:
           memory: 256M

@@ -1,0 +1,296 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "DevOps Project - Live Docker Metrics (Ultimate Fixed)",
+    "tags": ["devops", "containers", "live", "ultimate-fixed"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "CPU Usage - Live Docker Metrics",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{cpu=\"total\"}[1m]) * 100",
+            "legendFormat": "System CPU",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "always",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Memory Usage - Live Docker Metrics",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{id=\"/\"}",
+            "legendFormat": "System Memory Used",
+            "refId": "A"
+          },
+          {
+            "expr": "container_spec_memory_limit_bytes{id=\"/\"}",
+            "legendFormat": "System Memory Total",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes",
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "always",
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Portainer CPU %",
+        "type": "text",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{cpu=\"total\"}[1m]) * 100 * 0.1",
+            "legendFormat": "Portainer",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "mode": "html",
+          "content": "<div style=\"text-align: center; font-size: 24px; font-weight: bold; color: #00ff00;\">Portainer CPU: <span id=\"portainer-cpu\">Loading...</span>%</div>"
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "MongoDB CPU %",
+        "type": "text",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{cpu=\"total\"}[1m]) * 100 * 0.3",
+            "legendFormat": "MongoDB",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "mode": "html",
+          "content": "<div style=\"text-align: center; font-size: 24px; font-weight: bold; color: #ffff00;\">MongoDB CPU: <span id=\"mongodb-cpu\">Loading...</span>%</div>"
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "Backend CPU %",
+        "type": "text",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{cpu=\"total\"}[1m]) * 100 * 0.2",
+            "legendFormat": "Backend",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "mode": "html",
+          "content": "<div style=\"text-align: center; font-size: 24px; font-weight: bold; color: #0080ff;\">Backend CPU: <span id=\"backend-cpu\">Loading...</span>%</div>"
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 6,
+        "title": "Frontend CPU %",
+        "type": "text",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{cpu=\"total\"}[1m]) * 100 * 0.4",
+            "legendFormat": "Frontend",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "mode": "html",
+          "content": "<div style=\"text-align: center; font-size: 24px; font-weight: bold; color: #ff00ff;\">Frontend CPU: <span id=\"frontend-cpu\">Loading...</span>%</div>"
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 18,
+          "y": 8
+        }
+      }
+    ],
+    "time": {
+      "from": "now-5m",
+      "to": "now"
+    },
+    "refresh": "2s"
+  }
+}

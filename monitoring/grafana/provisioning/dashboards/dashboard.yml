@@ -10,3 +10,12 @@ providers:
     allowUiUpdates: true
     options:
       path: /var/lib/grafana/dashboards
+  - name: 'devops-dashboards'
+    orgId: 1
+    folder: 'DevOps Project'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 5
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

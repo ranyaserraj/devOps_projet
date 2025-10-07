@@ -1,0 +1,189 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "DevOps Project - Monitoring Final",
+    "tags": ["devops", "containers", "monitoring", "real-time"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "CPU Usage - DevOps Project",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=\"idurar-portainer\"}[5m]) * 100",
+            "legendFormat": "Portainer"
+          },
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=\"idurar-mongodb\"}[5m]) * 100",
+            "legendFormat": "MongoDB"
+          },
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=\"idurar-backend\"}[5m]) * 100",
+            "legendFormat": "Backend"
+          },
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=\"idurar-frontend\"}[5m]) * 100",
+            "legendFormat": "Frontend"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "CPU %",
+            "max": 5,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "legend": {
+          "show": true,
+          "values": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "avg": false,
+          "total": false
+        },
+        "lines": true,
+        "linewidth": 2,
+        "points": true,
+        "pointradius": 3,
+        "fill": 0,
+        "thresholds": [],
+        "colors": ["#73BF69", "#F2CC0C", "#F2495C", "#7B68EE"]
+      },
+      {
+        "id": 2,
+        "title": "Memory Usage - DevOps Project",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{name=\"idurar-portainer\"} / 1024 / 1024",
+            "legendFormat": "Portainer"
+          },
+          {
+            "expr": "container_memory_usage_bytes{name=\"idurar-mongodb\"} / 1024 / 1024",
+            "legendFormat": "MongoDB"
+          },
+          {
+            "expr": "container_memory_usage_bytes{name=\"idurar-backend\"} / 1024 / 1024",
+            "legendFormat": "Backend"
+          },
+          {
+            "expr": "container_memory_usage_bytes{name=\"idurar-frontend\"} / 1024 / 1024",
+            "legendFormat": "Frontend"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Memory (MB)",
+            "max": 600,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "legend": {
+          "show": true,
+          "values": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "avg": false,
+          "total": false
+        },
+        "lines": true,
+        "linewidth": 2,
+        "points": true,
+        "pointradius": 3,
+        "fill": 0,
+        "thresholds": [],
+        "colors": ["#73BF69", "#F2CC0C", "#F2495C", "#7B68EE"]
+      },
+      {
+        "id": 3,
+        "title": "DevOps Project Summary",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=\"idurar-portainer\"}[5m]) * 100",
+            "legendFormat": "Portainer CPU %"
+          },
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=\"idurar-mongodb\"}[5m]) * 100",
+            "legendFormat": "MongoDB CPU %"
+          },
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=\"idurar-backend\"}[5m]) * 100",
+            "legendFormat": "Backend CPU %"
+          },
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=\"idurar-frontend\"}[5m]) * 100",
+            "legendFormat": "Frontend CPU %"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 50
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            },
+            "unit": "percent",
+            "decimals": 4
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "horizontal",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        }
+      }
+    ],
+    "time": {
+      "from": "now-15m",
+      "to": "now"
+    },
+    "refresh": "5s",
+    "schemaVersion": 27,
+    "version": 1,
+    "links": []
+  }
+}
