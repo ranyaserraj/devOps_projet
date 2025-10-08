@@ -67,21 +67,58 @@ pipeline {
             }
         }
         
+        stage('Start Services') {
+            steps {
+                echo '🚀 Starting backend and frontend services...'
+                sh '''
+                    export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
+                    
+                    # Check if Docker services are running
+                    echo "Checking Docker services..."
+                    docker ps || echo "Docker not available, will try direct startup"
+                    
+                    # Start backend service if not running
+                    echo "Starting backend service..."
+                    cd backend
+                    npm install --production 2>&1 | tail -10
+                    nohup npm start > ../backend.log 2>&1 &
+                    BACKEND_PID=$!
+                    echo $BACKEND_PID > ../backend.pid
+                    echo "Backend started with PID: $BACKEND_PID"
+                    
+                    # Start frontend service if not running
+                    echo "Starting frontend service..."
+                    cd ../frontend
+                    npm install --production 2>&1 | tail -10
+                    nohup npm run dev > ../frontend.log 2>&1 &
+                    FRONTEND_PID=$!
+                    echo $FRONTEND_PID > ../frontend.pid
+                    echo "Frontend started with PID: $FRONTEND_PID"
+                    
+                    # Wait for services to initialize
+                    echo "Waiting for services to initialize (30 seconds)..."
+                    sleep 30
+                    
+                    echo "Services startup initiated"
+                '''
+            }
+        }
+        
         stage('Network Connectivity Check') {
             steps {
                 echo '🌐 Checking network connectivity to services...'
                 script {
-                    // Set up Node.js path
                     sh '''
                         export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
                         
                         echo "Testing connectivity to backend..."
-                        # Try different hostnames
-                        for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
+                        BACKEND_FOUND=0
+                        for host in "localhost" "127.0.0.1" "host.docker.internal" "172.17.0.1"; do
                             echo "Testing $host:5000..."
-                            if curl -s --connect-timeout 5 "$host:5000" > /dev/null 2>&1; then
+                            if curl -s --connect-timeout 10 --max-time 15 "$host:5000" > /dev/null 2>&1; then
                                 echo "✅ Backend accessible via $host:5000"
                                 echo "$host" > backend_host.txt
+                                BACKEND_FOUND=1
                                 break
                             else
                                 echo "❌ Backend not accessible via $host:5000"
@@ -89,35 +126,43 @@ pipeline {
                         done
                         
                         echo "Testing connectivity to frontend..."
-                        for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
+                        FRONTEND_FOUND=0
+                        for host in "localhost" "127.0.0.1" "host.docker.internal" "172.17.0.1"; do
                             echo "Testing $host:3000..."
-                            if curl -s --connect-timeout 5 "$host:3000" > /dev/null 2>&1; then
+                            if curl -s --connect-timeout 10 --max-time 15 "$host:3000" > /dev/null 2>&1; then
                                 echo "✅ Frontend accessible via $host:3000"
                                 echo "$host" > frontend_host.txt
+                                FRONTEND_FOUND=1
                                 break
                             else
                                 echo "❌ Frontend not accessible via $host:3000"
                             fi
                         done
                         
-                        # Show network info
-                        echo "Network configuration:"
-                        echo "Hostname: $(hostname)"
-                        echo "Available network interfaces:"
-                        ifconfig 2>/dev/null || echo "ifconfig not available"
-                        echo "Hosts file:"
-                        cat /etc/hosts
+                        # Check service logs if not found
+                        if [ $BACKEND_FOUND -eq 0 ]; then
+                            echo "⚠️ Backend not accessible, checking logs..."
+                            tail -20 backend.log || echo "No backend logs available"
+                        fi
+                        
+                        if [ $FRONTEND_FOUND -eq 0 ]; then
+                            echo "⚠️ Frontend not accessible, checking logs..."
+                            tail -20 frontend.log || echo "No frontend logs available"
+                        fi
+                        
+                        # Even if services are not accessible, continue with tests
+                        # (tests will use fallback configuration)
+                        echo "localhost" > backend_host.txt
+                        echo "localhost" > frontend_host.txt
                     '''
                     
-                    // Read the detected hosts
                     def backendHost = sh(script: 'cat backend_host.txt 2>/dev/null || echo "localhost"', returnStdout: true).trim()
                     def frontendHost = sh(script: 'cat frontend_host.txt 2>/dev/null || echo "localhost"', returnStdout: true).trim()
                     
-                    // Set environment variables for subsequent stages
                     env.BACKEND_HOST = backendHost
                     env.FRONTEND_HOST = frontendHost
                     
-                    echo "🌐 Detected hosts: Backend=$backendHost, Frontend=$frontendHost"
+                    echo "🌐 Using hosts: Backend=$backendHost, Frontend=$frontendHost"
                 }
             }
         }
@@ -136,7 +181,7 @@ pipeline {
         
         stage('Backend Tests') {
             steps {
-                echo '🧪 Running Backend API Tests...'
+                echo ' Running Backend API Tests...'
                 sh '''
                     # Set up Node.js path
                     export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
@@ -152,7 +197,7 @@ pipeline {
         
         stage('Frontend Tests') {
             steps {
-                echo '🎨 Running Frontend Tests...'
+                echo ' Running Frontend Tests...'
                 sh '''
                     # Set up Node.js path
                     export PATH=$PWD/node-v18.19.0-linux-x64/bin:$PATH
@@ -257,6 +302,30 @@ pipeline {
     post {
         always {
             echo '📊 Test execution completed!'
+            
+            // Cleanup services
+            sh '''
+                echo "🧹 Cleaning up services..."
+                
+                # Stop backend service
+                if [ -f backend.pid ]; then
+                    BACKEND_PID=$(cat backend.pid)
+                    kill $BACKEND_PID 2>/dev/null || echo "Backend service already stopped"
+                    rm -f backend.pid
+                fi
+                
+                # Stop frontend service
+                if [ -f frontend.pid ]; then
+                    FRONTEND_PID=$(cat frontend.pid)
+                    kill $FRONTEND_PID 2>/dev/null || echo "Frontend service already stopped"
+                    rm -f frontend.pid
+                fi
+                
+                # Clean up temporary files
+                rm -f backend.log frontend.log backend_host.txt frontend_host.txt
+                
+                echo "✅ Cleanup completed"
+            '''
             
             // Stop energy monitoring
             script {

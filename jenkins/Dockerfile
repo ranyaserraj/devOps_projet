@@ -37,6 +37,7 @@ USER jenkins
 
 # Install Jenkins plugins
 RUN jenkins-plugin-cli --plugins \
+    configuration-as-code \
     docker-workflow \
     docker-plugin \
     nodejs \
@@ -52,8 +53,6 @@ RUN jenkins-plugin-cli --plugins \
     credentials-binding \
     timestamper \
     ws-cleanup \
-    ant \
-    gradle \
     workflow-aggregator \
     pipeline-github-lib \
     pipeline-stage-tags-metadata \
@@ -62,11 +61,13 @@ RUN jenkins-plugin-cli --plugins \
 # Set environment variables
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
 ENV JENKINS_OPTS="--httpPort=8080"
+ENV CASC_JENKINS_CONFIG="/var/jenkins_home/jenkins.yaml"
 
 # Expose Jenkins port
 EXPOSE 8080
 
-# Copy Jenkins configuration
-COPY jenkins.yaml /var/jenkins_home/jenkins.yaml
-COPY jobs/ /var/jenkins_home/jobs/
-COPY plugins.txt /var/jenkins_home/plugins.txt
+# Copy Jenkins configuration with proper ownership
+USER root
+COPY --chown=jenkins:jenkins jenkins.yaml /var/jenkins_home/jenkins.yaml
+COPY --chown=jenkins:jenkins jobs/ /var/jenkins_home/jobs/
+USER jenkins

@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Jenkins Simple - Sans configuration complexe
+  jenkins-simple:
+    image: jenkins/jenkins:lts
+    container_name: jenkins-simple
+    restart: unless-stopped
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_simple_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../:/workspace
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - JENKINS_OPTS=--httpPort=8080
+      - JENKINS_ADMIN_ID=admin
+      - JENKINS_ADMIN_PASSWORD=admin123
+    networks:
+      - jenkins-network
+
+  # MongoDB pour les tests
+  jenkins-mongodb:
+    image: mongo:7.0
+    container_name: jenkins-mongodb-simple
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: jenkins
+      MONGO_INITDB_ROOT_PASSWORD: jenkins123
+      MONGO_INITDB_DATABASE: jenkins_test
+    volumes:
+      - jenkins_mongodb_simple_data:/data/db
+    networks:
+      - jenkins-network
+
+volumes:
+  jenkins_simple_home:
+  jenkins_mongodb_simple_data:
+
+networks:
+  jenkins-network:
+    driver: bridge
+

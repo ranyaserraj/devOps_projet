@@ -71,19 +71,54 @@ pipeline {
             }
         }
         
+        stage('Start Application Services') {
+            steps {
+                echo '🚀 Starting backend and frontend services in parallel...'
+                sh '''
+                    export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
+                    
+                    # Check if Docker services are running
+                    echo "Checking Docker services..."
+                    docker ps || echo "Docker not available, will try direct startup"
+                    
+                    # Start backend service (parallel)
+                    echo "Starting backend service..."
+                    (cd backend && npm install --production --prefer-offline 2>&1 | tail -10 && nohup npm start > ../backend.log 2>&1 & echo $! > ../backend.pid) &
+                    BACKEND_START_PID=$!
+                    
+                    # Start frontend service (parallel)
+                    echo "Starting frontend service..."
+                    (cd frontend && npm install --production --prefer-offline 2>&1 | tail -10 && nohup npm run dev > ../frontend.log 2>&1 & echo $! > ../frontend.pid) &
+                    FRONTEND_START_PID=$!
+                    
+                    # Wait for both installations to complete
+                    wait $BACKEND_START_PID
+                    wait $FRONTEND_START_PID
+                    
+                    # Wait for services to initialize
+                    echo "Waiting for services to initialize (40 seconds)..."
+                    sleep 40
+                    
+                    echo "✅ Services startup completed"
+                '''
+            }
+        }
+        
         stage('Network Connectivity Check') {
             steps {
-                echo '🌐 Checking network connectivity to services...'
+                echo '🌐 Verifying service connectivity...'
                 script {
                     sh '''
                         export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
                         
                         echo "Testing connectivity to backend..."
-                        for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
+                        BACKEND_FOUND=0
+                        for host in "localhost" "127.0.0.1" "host.docker.internal" "172.17.0.1"; do
                             echo "Testing $host:5000..."
-                            if curl -s --connect-timeout 5 "$host:5000" > /dev/null 2>&1; then
+                            if curl -s --connect-timeout 10 --max-time 15 "$host:5000" > /dev/null 2>&1; then
                                 echo "✅ Backend accessible via $host:5000"
                                 echo "$host" > backend_host.txt
+                                BACKEND_FOUND=1
                                 break
                             else
                                 echo "❌ Backend not accessible via $host:5000"
@@ -91,23 +126,33 @@ pipeline {
                         done
                         
                         echo "Testing connectivity to frontend..."
-                        for host in "host.docker.internal" "localhost" "172.17.0.1" "host-gateway"; do
+                        FRONTEND_FOUND=0
+                        for host in "localhost" "127.0.0.1" "host.docker.internal" "172.17.0.1"; do
                             echo "Testing $host:3000..."
-                            if curl -s --connect-timeout 5 "$host:3000" > /dev/null 2>&1; then
+                            if curl -s --connect-timeout 10 --max-time 15 "$host:3000" > /dev/null 2>&1; then
                                 echo "✅ Frontend accessible via $host:3000"
                                 echo "$host" > frontend_host.txt
+                                FRONTEND_FOUND=1
                                 break
                             else
                                 echo "❌ Frontend not accessible via $host:3000"
                             fi
                         done
                         
-                        echo "Network configuration:"
-                        echo "Hostname: $(hostname)"
-                        echo "Available network interfaces:"
-                        ifconfig 2>/dev/null || echo "ifconfig not available"
-                        echo "Hosts file:"
-                        cat /etc/hosts
+                        # Check service logs if not found
+                        if [ $BACKEND_FOUND -eq 0 ]; then
+                            echo "⚠️ Backend not accessible, checking logs..."
+                            tail -30 backend.log || echo "No backend logs available"
+                        fi
+                        
+                        if [ $FRONTEND_FOUND -eq 0 ]; then
+                            echo "⚠️ Frontend not accessible, checking logs..."
+                            tail -30 frontend.log || echo "No frontend logs available"
+                        fi
+                        
+                        # Set default hosts
+                        echo "localhost" > backend_host.txt
+                        echo "localhost" > frontend_host.txt
                     '''
                     
                     def backendHost = sh(script: 'cat backend_host.txt 2>/dev/null || echo "localhost"', returnStdout: true).trim()
@@ -116,23 +161,20 @@ pipeline {
                     env.BACKEND_HOST = backendHost
                     env.FRONTEND_HOST = frontendHost
                     
-                    echo "🌐 Detected hosts: Backend=$backendHost, Frontend=$frontendHost"
+                    echo "🌐 Using hosts: Backend=$backendHost, Frontend=$frontendHost"
                 }
             }
         }
         
         stage('Install Dependencies') {
             steps {
-                echo '📦 Installing optimized dependencies...'
+                echo '📦 Installing optimized test dependencies...'
                 sh '''
                     export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
                     cd tests
                     
                     # Install dependencies with optimization flags
                     npm install --production=false --no-optional --prefer-offline
-                    
-                    # Install additional optimization packages
-                    npm install --save-dev cluster pm2
                     
                     # Fix security vulnerabilities
                     echo "🔒 Running security audit and fixing vulnerabilities..."
@@ -148,80 +190,12 @@ pipeline {
             }
         }
         
-        stage('Start Services') {
-            steps {
-                echo '🚀 Starting backend and frontend services...'
-                sh '''
-                    export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
-                    
-                    # Start backend service
-                    echo "Starting backend service..."
-                    cd backend
-                    npm install --production
-                    nohup npm start > ../backend.log 2>&1 &
-                    BACKEND_PID=$!
-                    echo $BACKEND_PID > ../backend.pid
-                    
-                    # Start frontend service
-                    echo "Starting frontend service..."
-                    cd ../frontend
-                    npm install --production
-                    nohup npm start > ../frontend.log 2>&1 &
-                    FRONTEND_PID=$!
-                    echo $FRONTEND_PID > ../frontend.pid
-                    
-                    # Wait for services to start
-                    echo "Waiting for services to start..."
-                    sleep 10
-                    
-                    # Check if services are running
-                    echo "Checking service status..."
-                    curl -f http://host.docker.internal:5000 || echo "Backend not ready yet"
-                    curl -f http://host.docker.internal:3000 || echo "Frontend not ready yet"
-                '''
-            }
-        }
-        
-        stage('Start Application Services') {
-            steps {
-                echo '🚀 Starting backend and frontend services...'
-                sh '''
-                    export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
-                    
-                    # Start backend service
-                    echo "Starting backend service..."
-                    cd backend
-                    npm install --production
-                    nohup npm start > ../backend.log 2>&1 &
-                    BACKEND_PID=$!
-                    echo $BACKEND_PID > ../backend.pid
-                    
-                    # Start frontend service
-                    echo "Starting frontend service..."
-                    cd ../frontend
-                    npm install --production
-                    nohup npm start > ../frontend.log 2>&1 &
-                    FRONTEND_PID=$!
-                    echo $FRONTEND_PID > ../frontend.pid
-                    
-                    # Wait for services to start
-                    echo "Waiting for services to start..."
-                    sleep 15
-                    
-                    # Check if services are running
-                    echo "Checking service status..."
-                    curl -f http://host.docker.internal:5000 || echo "Backend not ready yet"
-                    curl -f http://host.docker.internal:3000 || echo "Frontend not ready yet"
-                '''
-            }
-        }
-        
         // Parallel execution of different test categories
         stage('Parallel Test Execution') {
             parallel {
                 stage('Critical Tests') {
                     steps {
-                        echo '🔥 Running Critical Tests in parallel...'
+                        echo ' Running Critical Tests in parallel...'
                         sh '''
                             export PATH=$PWD/node-v20.18.1-linux-x64/bin:$PATH
                             cd tests
@@ -403,36 +377,36 @@ pipeline {
             }
         }
         
-        stage('Cleanup Services') {
-            steps {
-                echo '🧹 Cleaning up services...'
-                sh '''
-                    # Stop backend service
-                    if [ -f backend.pid ]; then
-                        BACKEND_PID=$(cat backend.pid)
-                        kill $BACKEND_PID 2>/dev/null || echo "Backend service already stopped"
-                        rm -f backend.pid
-                    fi
-                    
-                    # Stop frontend service
-                    if [ -f frontend.pid ]; then
-                        FRONTEND_PID=$(cat frontend.pid)
-                        kill $FRONTEND_PID 2>/dev/null || echo "Frontend service already stopped"
-                        rm -f frontend.pid
-                    fi
-                    
-                    # Clean up log files
-                    rm -f backend.log frontend.log
-                    
-                    echo "Services cleaned up successfully"
-                '''
-            }
-        }
     }
     
     post {
         always {
             echo '📊 Optimized test execution completed!'
+            
+            // Cleanup services first
+            sh '''
+                echo "🧹 Cleaning up services..."
+                
+                # Stop backend service
+                if [ -f backend.pid ]; then
+                    BACKEND_PID=$(cat backend.pid)
+                    kill $BACKEND_PID 2>/dev/null || echo "Backend service already stopped"
+                    rm -f backend.pid
+                fi
+                
+                # Stop frontend service
+                if [ -f frontend.pid ]; then
+                    FRONTEND_PID=$(cat frontend.pid)
+                    kill $FRONTEND_PID 2>/dev/null || echo "Frontend service already stopped"
+                    rm -f frontend.pid
+                fi
+                
+                # Clean up temporary files
+                rm -f backend.log frontend.log backend_host.txt frontend_host.txt
+                
+                echo "✅ Cleanup completed"
+            '''
+            
             script {
                 def currentBuild = currentBuild
                 def duration = currentBuild.durationString
