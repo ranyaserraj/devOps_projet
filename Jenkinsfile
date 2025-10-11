@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         DATABASE = credentials('DATABASE')
+        DOCKER_BUILDKIT = '1'  // Active Docker BuildKit
         CACHE_DIR = "/var/jenkins_home/cache"  // Dossier persistant pour les caches
     }
 
@@ -156,7 +157,6 @@ pipeline {
                 
                 # Empreinte CO2 approximative
                 # 0.000233 kg CO2 par Wh pour un serveur moyen (approximation)
-                # CPU % x durée x facteur d'énergie = estimation
                 CPU_USAGE=$(ps -eo %cpu --no-headers | awk '{sum+=$1} END {print sum}')
                 CO2=$(awk "BEGIN {print $CPU_USAGE*${ELAPSED}*0.000233}")
                 echo "🌱 Estimated CO2 footprint: ${CO2} kg CO2"
