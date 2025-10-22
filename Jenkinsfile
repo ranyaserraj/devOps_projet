@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         DATABASE = credentials('DATABASE')
+        SONAR_TOKEN = credentials('SONAR_TOKEN')  // SonarQube token stocké dans Jenkins Credentials
         DOCKER_BUILDKIT = '1'  // Active Docker BuildKit
         CACHE_DIR = "/var/jenkins_home/cache"  // Dossier persistant pour les caches
     }
@@ -94,6 +95,21 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            steps {
+                echo '🔍 Running SonarQube analysis...'
+                withSonarQubeEnv('MySonarQubeServer') { // Nom du serveur Sonar configuré dans Jenkins
+                    sh '''
+                    sonar-scanner \
+                        -Dsonar.projectKey=devops-project \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=$SONAR_HOST_URL \
+                        -Dsonar.login=$SONAR_TOKEN
+                    '''
+                }
+            }
+        }
+
         stage('Start App') {
             steps {
                 echo '🚀 Starting backend & frontend servers...'
@@ -140,23 +156,15 @@ pipeline {
                 echo '⚡ Measuring build time, CPU, memory, and estimated CO2 footprint...'
                 sh '''
                 echo "📊 Build Metrics:"
-                
-                # Temps total
                 START=$(date +%s)
-                
-                # Simulation d'un build (ou un vrai build si vous voulez)
                 sleep 1  # placeholder pour la commande de build réelle
-                
                 END=$(date +%s)
                 ELAPSED=$((END-START))
                 echo "⏱️ Time elapsed: ${ELAPSED} seconds"
                 
-                # CPU et mémoire (snapshot instantané)
                 echo "💻 CPU & Memory usage (top 5 processes):"
                 ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%cpu | head -n 6
                 
-                # Empreinte CO2 approximative
-                # 0.000233 kg CO2 par Wh pour un serveur moyen (approximation)
                 CPU_USAGE=$(ps -eo %cpu --no-headers | awk '{sum+=$1} END {print sum}')
                 CO2=$(awk "BEGIN {print $CPU_USAGE*${ELAPSED}*0.000233}")
                 echo "🌱 Estimated CO2 footprint: ${CO2} kg CO2"
