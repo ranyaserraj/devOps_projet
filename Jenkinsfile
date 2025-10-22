@@ -2,14 +2,13 @@ pipeline {
     agent any
 
     environment {
-        DATABASE = credentials('DATABASE')                     // MongoDB
-        SONAR_TOKEN = credentials('sonar-token')              // SonarQube token
-        DOCKER_BUILDKIT = '1'                                  // Active Docker BuildKit
-        CACHE_DIR = "/var/jenkins_home/cache"                 // Cache persistant
+        DATABASE = credentials('DATABASE')
+        SONAR_TOKEN = credentials('0ebcd484-b81c-47c1-a83b-9655be84f3ab') // SonarQube token stocké dans Jenkins Credentials
+        DOCKER_BUILDKIT = '1'                                         // Active Docker BuildKit
+        CACHE_DIR = "/var/jenkins_home/cache"                         // Dossier persistant pour les caches
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo '📥 Checkout code from GitHub...'
@@ -99,17 +98,15 @@ pipeline {
             steps {
                 echo "🔍 Running SonarQube analysis..."
                 withSonarQubeEnv('SonarQube') {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                        sh '''
-                            echo "➡️ Adding SonarScanner to PATH..."
-                            export PATH=$PATH:/opt/sonar-scanner/bin
-                            sonar-scanner \
-                                -Dsonar.projectKey=devops-project \
-                                -Dsonar.sources=. \
-                                -Dsonar.host.url=http://sonarqube:9000 \
-                                -Dsonar.login=$SONAR_TOKEN
-                        '''
-                    }
+                    sh '''
+                    echo "➡️ Adding SonarScanner to PATH..."
+                    export PATH=$PATH:/opt/sonar-scanner/bin
+                    sonar-scanner \
+                        -Dsonar.projectKey=devops-project \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=http://sonarqube:9000 \
+                        -Dsonar.login=$SONAR_TOKEN
+                    '''
                 }
             }
         }
@@ -161,14 +158,12 @@ pipeline {
                 sh '''
                 echo "📊 Build Metrics:"
                 START=$(date +%s)
-                sleep 1  # placeholder pour la commande de build réelle
+                sleep 1 # placeholder pour la commande de build réelle
                 END=$(date +%s)
                 ELAPSED=$((END-START))
                 echo "⏱️ Time elapsed: ${ELAPSED} seconds"
-                
                 echo "💻 CPU & Memory usage (top 5 processes):"
                 ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%cpu | head -n 6
-                
                 CPU_USAGE=$(ps -eo %cpu --no-headers | awk '{sum+=$1} END {print sum}')
                 CO2=$(awk "BEGIN {print $CPU_USAGE*${ELAPSED}*0.000233}")
                 echo "🌱 Estimated CO2 footprint: ${CO2} kg CO2"
