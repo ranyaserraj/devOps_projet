@@ -95,20 +95,20 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                echo '🔍 Running SonarQube analysis...'
-                withSonarQubeEnv('MySonarQubeServer') { // Nom du serveur Sonar configuré dans Jenkins
-                    sh '''
-                    sonar-scanner \
-                        -Dsonar.projectKey=devops-project \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.login=$SONAR_TOKEN
-                    '''
-                }
-            }
+stage('SonarQube Analysis') {
+    steps {
+        echo '🔍 Running SonarQube analysis...'
+        withSonarQubeEnv('MySonarQubeServer') {
+            sh """
+            sonar-scanner \
+                -Dsonar.projectKey=devops-project \
+                -Dsonar.sources=. \
+                -Dsonar.host.url=$SONAR_HOST_URL \
+                -Dsonar.login=$SONAR_TOKEN
+            """
         }
+    }
+}
 
         stage('Start App') {
             steps {
