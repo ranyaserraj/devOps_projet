@@ -98,7 +98,7 @@ pipeline {
 stage('SonarQube Analysis') {
     steps {
         echo '🔍 Running SonarQube analysis...'
-        withSonarQubeEnv('MySonarQubeServer') {
+        withSonarQubeEnv('SonarQube') {
             sh """
             sonar-scanner \
                 -Dsonar.projectKey=devops-project \
