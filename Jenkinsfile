@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DATABASE = credentials('DATABASE')
-        SONAR_TOKEN = credentials('SONAR_TOKEN')  // SonarQube token stocké dans Jenkins Credentials
+        SONAR_TOKEN = credentials('0ebcd484-b81c-47c1-a83b-9655be84f3ab')  // SonarQube token stocké dans Jenkins Credentials
         DOCKER_BUILDKIT = '1'  // Active Docker BuildKit
         CACHE_DIR = "/var/jenkins_home/cache"  // Dossier persistant pour les caches
     }
