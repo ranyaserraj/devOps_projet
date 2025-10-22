@@ -97,24 +97,23 @@ pipeline {
 
 stage('SonarQube Analysis') {
     steps {
-        echo '🔍 Running SonarQube analysis...'
-        
-        // Injection des variables d'environnement depuis Jenkins SonarQube config
-        withSonarQubeEnv('SonarQube') { // 'SonarQube' = nom de ton installation Jenkins
-            withCredentials([string(credentialsId: '0ebcd484-b81c-47c1-a83b-9655be84f3ab', variable: 'SONAR_TOKEN')]) {
-                
-                // Exécution du scanner via le plugin (pas besoin d'installation locale)
-                sh """
+        echo "🔍 Running SonarQube analysis..."
+        withSonarQubeEnv('SonarQube') {
+            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                sh '''
+                    echo "➡️ Adding SonarScanner to PATH..."
+                    export PATH=$PATH:/opt/sonar-scanner/bin
                     sonar-scanner \
                         -Dsonar.projectKey=devops-project \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=\$SONAR_HOST_URL \
-                        -Dsonar.login=\$SONAR_TOKEN
-                """
+                        -Dsonar.host.url=http://localhost:9000 \
+                        -Dsonar.login=$SONAR_TOKEN
+                '''
             }
         }
     }
 }
+
 
 
         stage('Start App') {
