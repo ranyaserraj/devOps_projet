@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         DATABASE = credentials('DATABASE')
-        SONAR_TOKEN = credentials('0ebcd484-b81c-47c1-a83b-9655be84f3ab')  // SonarQube token stocké dans Jenkins Credentials
-        DOCKER_BUILDKIT = '1'  // Active Docker BuildKit
-        CACHE_DIR = "/var/jenkins_home/cache"  // Dossier persistant pour les caches
+        SONAR_TOKEN = credentials('0ebcd484-b81c-47c1-a83b-9655be84f3ab') // Ton token SonarQube
+        DOCKER_BUILDKIT = '1'
+        CACHE_DIR = "/var/jenkins_home/cache"
     }
 
     stages {
@@ -95,26 +95,22 @@ pipeline {
             }
         }
 
-stage('SonarQube Analysis') {
-    steps {
-        echo "🔍 Running SonarQube analysis..."
-        withSonarQubeEnv('SonarQube') {
-            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                sh '''
+        stage('SonarQube Analysis') {
+            steps {
+                echo "🔍 Running SonarQube analysis..."
+                withSonarQubeEnv('SonarQube') {
                     echo "➡️ Adding SonarScanner to PATH..."
-                    export PATH=$PATH:/opt/sonar-scanner/bin
-                    sonar-scanner \
-                        -Dsonar.projectKey=devops-project \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://localhost:9000 \
-                        -Dsonar.login=$SONAR_TOKEN
-                '''
+                    sh '''
+                        export PATH=$PATH:/opt/sonar-scanner/bin
+                        sonar-scanner \
+                            -Dsonar.projectKey=devops-project \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=http://localhost:9000 \
+                            -Dsonar.login=${SONAR_TOKEN}
+                    '''
+                }
             }
         }
-    }
-}
-
-
 
         stage('Start App') {
             steps {
@@ -163,7 +159,7 @@ stage('SonarQube Analysis') {
                 sh '''
                 echo "📊 Build Metrics:"
                 START=$(date +%s)
-                sleep 1  # placeholder pour la commande de build réelle
+                sleep 1  # placeholder for real build
                 END=$(date +%s)
                 ELAPSED=$((END-START))
                 echo "⏱️ Time elapsed: ${ELAPSED} seconds"
