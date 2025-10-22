@@ -95,22 +95,24 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                echo "🔍 Running SonarQube analysis..."
-                withSonarQubeEnv('SonarQube') {
+stage('SonarQube Analysis') {
+    steps {
+        echo "🔍 Running SonarQube analysis..."
+        withSonarQubeEnv('SonarQube') {
+            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                sh '''
                     echo "➡️ Adding SonarScanner to PATH..."
-                    sh '''
-                        export PATH=$PATH:/opt/sonar-scanner/bin
-                        sonar-scanner \
-                            -Dsonar.projectKey=devops-project \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://localhost:9000 \
-                            -Dsonar.login=${SONAR_TOKEN}
-                    '''
-                }
+                    export PATH=$PATH:/opt/sonar-scanner/bin
+                    sonar-scanner \
+                        -Dsonar.projectKey=devops-project \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=http://sonarqube:9000 \
+                        -Dsonar.login=$SONAR_TOKEN
+                '''
             }
         }
+    }
+}
 
         stage('Start App') {
             steps {
